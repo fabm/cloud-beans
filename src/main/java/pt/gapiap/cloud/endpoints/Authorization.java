@@ -4,6 +4,7 @@ package pt.gapiap.cloud.endpoints;
 import com.google.api.server.spi.response.UnauthorizedException;
 import com.google.appengine.api.users.User;
 import com.google.appengine.api.utils.SystemProperty;
+import pt.gapiap.services.AuthorizationArea;
 
 
 public abstract class Authorization<R extends Enum<R>, U extends UserWithRoles<R>> {
@@ -89,12 +90,15 @@ public abstract class Authorization<R extends Enum<R>, U extends UserWithRoles<R
     }
 
 
-    public void check(R[] roles, String area) throws UnauthorizedException {
-        if (userWithRoles == null) {
-            throw createNotAuthenticatedError(area);
+    public void check(AuthorizationArea<R> authorizationArea) throws UnauthorizedException {
+        if (authorizationArea == null) {
+            return;
         }
-        if (!hasRoles(roles)) {
-            throw createNotAuthorizedError(area);
+        if (userWithRoles == null) {
+            throw createNotAuthenticatedError(authorizationArea.getArea());
+        }
+        if (!hasRoles(authorizationArea.getRoles())) {
+            throw createNotAuthorizedError(authorizationArea.getArea());
         }
     }
 }
