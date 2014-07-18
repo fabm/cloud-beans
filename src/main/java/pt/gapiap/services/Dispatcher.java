@@ -9,6 +9,7 @@ import pt.gapiap.proccess.annotations.MappedAction;
 import pt.gapiap.proccess.validation.BeanChecker;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -37,11 +38,13 @@ public class Dispatcher<R extends Enum<R>> {
         Method[] methods = classService.getMethods();
         Method method = null;
         MappedAction mappedAction = null;
+        authorizationAreaMap = new HashMap<>();
         for (Method me : methods) {
             mappedAction = me.getAnnotation(MappedAction.class);
             if (mappedAction != null) {
                 stringMapMethods.put(mappedAction.value(), me);
             }
+            method = me;
             Annotation rolesAnnotation = method.getAnnotation(rolesAnnotationClass);
             if (rolesAnnotation != null) {
                 try {
@@ -49,6 +52,7 @@ public class Dispatcher<R extends Enum<R>> {
                     AuthorizationArea authorizationArea = new AuthorizationArea();
                     authorizationArea.setArea(mappedAction.area());
                     authorizationArea.setRoles((R[]) valueMethod.invoke(rolesAnnotation));
+                    authorizationAreaMap.put(mappedAction.value(),authorizationArea);
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 } catch (InvocationTargetException e) {
@@ -58,22 +62,45 @@ public class Dispatcher<R extends Enum<R>> {
                 }
             }
         }
+        injectFields();
+    }
 
+    private void injectFields() {
+        for (Field field : service.getClass().getDeclaredFields()) {
+            try {
+                if (field.getType().isAssignableFrom(Authorization.class)) {
+                    field.setAccessible(true);
+                    field.set(service, authorization);
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private CEReturn dispatch(String methodName, Method method, Object entry) throws UnauthorizedException {
 
-        BeanChecker beanChecker = new BeanChecker();
-        beanChecker.check(entry);
+        if (entry != null) {
+            BeanChecker beanChecker = new BeanChecker();
+            beanChecker.check(entry);
+        }
+
 
         authorization.check(authorizationAreaMap.get(methodName));
 
         try {
-            if (entry == null) {
-                return (CEReturn) method.invoke(service);
-            } else {
-                return (CEReturn) method.invoke(service, entry);
+            Class<?>[] parameterTypes = method.getParameterTypes();
+            Object[] values = new Object[parameterTypes.length];
+            for (int i = 0; i < parameterTypes.length; i++) {
+                if (parameterTypes[i].isAssignableFrom(Authorization.class)) {
+                    values[i] = authorization;
+                } else if (entry != null && parameterTypes[i].isAssignableFrom(entry.getClass())) {
+                    values[i] = entry;
+                } else {
+                    throw new RuntimeException("Parameter type:" + parameterTypes[i].getCanonicalName() + " is unknown");
+                }
             }
+            return (CEReturn) method.invoke(service, values);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         } catch (InvocationTargetException e) {
