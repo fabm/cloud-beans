@@ -12,8 +12,8 @@ public enum GlobalError implements CEErrorReturn {
 
     static {
         messages = new String[GlobalError.values().length];
-        messages[REQUIRED.ordinal()] = "The file %s is required";
-        messages[EMAIL.ordinal()] = "The mail %s is not formated correctly";
+        messages[REQUIRED.ordinal()] = "The field %s is required";
+        messages[EMAIL.ordinal()] = "The field %s is not formated correctly";
         messages[NOT_AUTHENTICATED.ordinal()] = "You must be authenticated";
         messages[NOT_AUTHORIZED.ordinal()] = "You are not authorized to access '%s' area";
         messages[NO_NAME.ordinal()] = "Misses the user name";

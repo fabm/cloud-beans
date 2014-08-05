@@ -1,10 +1,13 @@
 package pt.gapiap.proccess.wrappers;
 
-import java.util.Map;
 
 public class ApiField {
+    Iterable<ValidationRule> validationRuleIterable;
     private String name;
-    private Map<String, Object> validationRules;
+
+    public Iterable<ValidationRule> getValidationRuleIterable() {
+        return validationRuleIterable;
+    }
 
     public String getName() {
         return name;
@@ -14,11 +17,4 @@ public class ApiField {
         this.name = name;
     }
 
-    public void setValidationRules(Map<String, Object> validationRules) {
-        this.validationRules = validationRules;
-    }
-
-    public Map<String, Object> getValidationRules() {
-        return validationRules;
-    }
 }

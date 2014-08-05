@@ -37,6 +37,6 @@ public class ApiMethodPMW extends AnnotationWrapper {
     }
 
     public Iterable<ApiField> getFields() {
-        return new IterableApiFields(this);
+        return new ApiFieldsIterable(this);
     }
 }

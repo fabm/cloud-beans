@@ -1,6 +1,7 @@
 package pt.gapiap.cloud.endpoints;
 
 import com.google.api.server.spi.config.ApiTransformer;
+import com.google.api.server.spi.response.UnauthorizedException;
 
 @ApiTransformer(CEReturnTransformer.class)
 public interface CEReturn {
@@ -11,5 +12,5 @@ public interface CEReturn {
      * @return
      * @throws CEError
      */
-    Object getCEResponse() throws CEError;
+    Object getCEResponse() throws CEError,UnauthorizedException;
 }

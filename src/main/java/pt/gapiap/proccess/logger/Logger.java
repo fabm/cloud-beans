@@ -1,16 +1,10 @@
 package pt.gapiap.proccess.logger;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class Logger {
-    private static PrintWriter printWriter;
+    private PrintWriter printWriter;
     private boolean debug = true;
     private boolean trace = true;
 
@@ -18,22 +12,26 @@ public class Logger {
         this.printWriter = printWriter;
     }
 
-
-    private Logger() {
+    public boolean isDebug() {
+        return debug;
     }
 
-    public static void create(PrintWriter printWriter) {
-        Logger.printWriter = printWriter;
+    public void setDebug(boolean debug) {
+        this.debug = debug;
     }
 
-    public static Logger get() {
-        return new Logger();
+    public boolean isTrace() {
+        return trace;
+    }
+
+    public void setTrace(boolean trace) {
+        this.trace = trace;
     }
 
     private void traceLog(int position) {
         if (trace) {
             StackTraceElement sTrace = Thread.currentThread().getStackTrace()[position];
-            printWriter.println("-->trace in:" + sTrace.getClassName() + "#" + sTrace.getMethodName() + ":" + sTrace.getLineNumber());
+            printWriter.printf("%20s#%30s %3d:", sTrace.getFileName(), sTrace.getMethodName(), sTrace.getLineNumber());
         }
     }
 
@@ -50,53 +48,19 @@ public class Logger {
         log(s, 4);
     }
 
-    private String listStringify(List<?> list) {
-        List<String> strList = new ArrayList<>(list.size());
-        for (Object object : list) {
-            if (object instanceof List<?>) {
-                strList.add(listStringify((List<?>) object));
-            } else {
-                strList.add(object.toString());
-            }
-        }
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        return gson.toJson(strList) + "\n";
-    }
-
-    private String mapStringify(Map<?, ?> map) {
-        Map<String, String> strMap = new HashMap<>();
-        for (Map.Entry<?, ?> entry : map.entrySet()) {
-            Object key = entry.getKey();
-            Object value = entry.getValue();
-            if (value instanceof Map<?, ?>) {
-                strMap.put(key.toString(), mapStringify((Map<?, ?>) value));
-            } else if (value instanceof List<?>) {
-                strMap.put(key.toString(), listStringify((List<?>) value));
-            } else {
-                strMap.put(key.toString(), value.toString());
-            }
-        }
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        return gson.toJson(strMap) + "\n";
-    }
-
-    public void log(List<?> list) {
-        log(listStringify(list), 4);
+    public PrintWriter getPrintWriter() {
+        return printWriter;
     }
 
     public void close() {
         printWriter.close();
     }
 
-    public void log(Map<?, ?> map) {
-        log(mapStringify(map), 4);
-    }
-
     public void log(Exception exception) {
         StackTraceElement[] strace = exception.getStackTrace();
-        StringBuilder stringBuilder = new StringBuilder("exception " + exception.getClass().getCanonicalName()+"\n");
+        StringBuilder stringBuilder = new StringBuilder("exception " + exception.getClass().getCanonicalName() + "\n");
         String message = exception.getMessage();
-        message = message == null ? "" : "message:" + message+"\n";
+        message = message == null ? "" : "message:" + message + "\n";
         stringBuilder.append(message);
 
         for (int i = 0; i < strace.length; i++) {
@@ -105,6 +69,21 @@ public class Logger {
                             ":" + strace[i].getLineNumber() + "\n"
             );
         }
-        log(stringBuilder.toString(),4);
+        log(stringBuilder.toString(), 4);
     }
+
+    public void logStack(boolean printall) {
+        StackTraceElement[] st = Thread.currentThread().getStackTrace();
+        printWriter.println("stack size:" + st.length);
+        if (printall) {
+            for (StackTraceElement ste : st) {
+                printWriter.println(ste.getClassName() + "#" + ste.getMethodName() + ":" + ste.getLineNumber());
+            }
+        }
+    }
+
+    public void logStack() {
+        logStack(false);
+    }
+
 }

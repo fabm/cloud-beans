@@ -1,5 +1,6 @@
 package pt.gapiap.proccess.wrappers;
 
+import com.google.inject.Inject;
 import pt.gapiap.proccess.logger.Logger;
 import pt.gapiap.proccess.mirrors.annotationMirror.AnnotationMirrorLoader;
 import pt.gapiap.proccess.mirrors.annotationMirror.UnexpectedAnnotation;
@@ -14,7 +15,8 @@ import java.util.Set;
 public class Validator {
     private static final String VALIDATION_METHOD_REFERENCE = "pt.gapiap.proccess.validation.ValidationMethod";
     private static Set<Validator> cache = new HashSet<>();
-
+    @Inject
+    Logger logger;
     private DeclaredType declaredType;
 
     private Validator() {
@@ -55,7 +57,7 @@ public class Validator {
                     Validation validation = AnnotationMirrorLoader.loader(new Validation(), annotationMirror, VALIDATION_METHOD_REFERENCE);
                     validations.add(validation);
                 } catch (UnexpectedAnnotation unexpectedAnnotation) {
-                    Logger.get().log(unexpectedAnnotation);
+                    logger.log(unexpectedAnnotation);
                 }
             }
     }

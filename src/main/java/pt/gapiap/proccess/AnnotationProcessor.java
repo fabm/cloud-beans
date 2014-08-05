@@ -1,12 +1,11 @@
 package pt.gapiap.proccess;
 
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import pt.gapiap.cloud.maps.ApiMapper;
 import pt.gapiap.proccess.exceptions.InvalidValidator;
+import pt.gapiap.proccess.inject.AProcessorGM;
 import pt.gapiap.proccess.logger.Logger;
-import pt.gapiap.proccess.validation.ValidationMethod;
-import pt.gapiap.proccess.validation.annotations.Email;
 import pt.gapiap.proccess.wrappers.*;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -14,31 +13,23 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @SupportedAnnotationTypes({
-        "pt.gapiap.proccess.annotations.ApiMethodParameters",
-        "pt.gapiap.proccess.validation.ValidationMethod"
+        "pt.gapiap.proccess.annotations.ApiMethodParameters"
 })
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class AnnotationProcessor extends AbstractProcessor {
-
     private static PrintWriter out;
+    private static AProcessorGM aProcessorGM;
     public Bundle aliasBundle = new Bundle("alias");
 
     private static String toUtf8(String string) throws UnsupportedEncodingException {
@@ -49,31 +40,13 @@ public class AnnotationProcessor extends AbstractProcessor {
         return new String(string.getBytes("UTF-8"), "ISO-8859-1");
     }
 
-    private static AnnotationMirror getAnnotationMirror(Element element, Class<? extends Annotation> annotationClass) {
-        for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
-            if (isMirrorOf(annotationMirror, annotationClass)) {
-                return annotationMirror;
-            }
+    private AProcessorGM getaProcessorGM(RoundEnvironment env) {
+        if (aProcessorGM == null) {
+            aProcessorGM = new AProcessorGM();
+            aProcessorGM.setProcessingEnv(processingEnv);
         }
-        return null;
-    }
-
-    private static boolean isTypeOf(TypeElement type, Class<?> clazz) {
-        if (type.getQualifiedName().contentEquals(clazz.getName())) {
-            return true;
-        }
-        return false;
-    }
-
-    private static boolean isMirrorOf(AnnotationMirror annotationMirror, Class<? extends Annotation> clazz) {
-        if (clazz.getName().equals(annotationMirror.getAnnotationType().toString())) {
-            return true;
-        }
-        return false;
-    }
-
-    private void printValidations() {
-
+        aProcessorGM.setRoundEnvironment(env);
+        return aProcessorGM;
     }
 
     private void note(String s) {
@@ -84,58 +57,70 @@ public class AnnotationProcessor extends AbstractProcessor {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, s);
     }
 
-    private void createLogger() throws IOException {
-        FileObject f = processingEnv.getFiler().createResource(StandardLocation.SOURCE_OUTPUT, "", "compile.log");
-        PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(
-                f.openOutputStream(), StandardCharsets.UTF_8), true);
-        Logger.create(printWriter);
+    private void createOut() throws IOException {
+        if (out == null) {
+            FileObject f = processingEnv.getFiler().createResource(StandardLocation.SOURCE_OUTPUT, "", "validationMap.json");
+            note("gravado em :" + f.toUri().getPath());
+            out = new PrintWriter(f.openWriter());
+        }
     }
+
+    private FileObject compileFo() throws IOException {
+        return processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "compile.log");
+    }
+
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment env) {
-        try {
-            createLogger();
-            if (out == null) {
-                FileObject f = processingEnv.getFiler().createResource(StandardLocation.SOURCE_OUTPUT, "", "x.txt");
-                note("gravado em :" + f.toUri().getPath());
-                out = new PrintWriter(new OutputStreamWriter(
-                        f.openOutputStream(), StandardCharsets.UTF_8), true);
-            }
-
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-            out.append(toUtf8(gson.toJson(aliasMap())) + "\n");
-
-            Map<String, ?> mapApi = null;
+        if (annotations.size() > 0) {
             try {
-                mapApi = getMapApi(env, annotations);
-                Logger.get().log(mapApi);
-            } catch (InvalidElementException e) {
-                Logger.get().log(e);
+                process(env);
+            } catch (RuntimeException e) {
+                e.printStackTrace();
             }
-
-
-            if (mapApi != null) {
-                out.append(toUtf8(gson.toJson(mapApi)) + "\n");
-            }
-
-        } catch (IOException e) {
-            note(String.format("Nao foi possivel escrever no ficheiro %s", e.getMessage()));
-        } catch (InvalidValidator invalidValidator) {
-            error(invalidValidator.getMessage());
-        } catch (RuntimeException re) {
-            Logger.get().log(re);
         }
-        out.close();
-        Logger.get().close();
-        return false;
+        return true;
+    }
+
+    private void process(RoundEnvironment env) {
+        AProcessorGM aProcessorGM = new AProcessorGM();
+        aProcessorGM.setProcessingEnv(processingEnv);
+        aProcessorGM.setRoundEnvironment(env);
+
+        Injector injector = Guice.createInjector(aProcessorGM);
+
+        Logger logger = injector.getInstance(Logger.class);
+        ApiMapper apiMapper = injector.getInstance(ApiMapper.class);
+        apiMapper.init();
+        logger.close();
+
+
+        try {
+            createOut();
+            out.print(apiMapper.getJsonPreatifyApisMap());
+            out.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void generateMap() throws UnsupportedEncodingException {
+        ApiMapper apiMapper = new ApiMapper();
+        if (apiMapper != null) {
+            out.append(apiMapper.toString());
+            //out.append(toUtf8(apiMapper.getJsonPreatifyApisMap()));
+            //out.append(toUtf8(gson.toJson(mapApi)) + "\n");
+        }
+    }
+
+    private void test() throws InvalidElementException, InvalidValidator {
+
     }
 
     private Map<String, ?> getMapApi(RoundEnvironment env, Set<? extends TypeElement> annotations) throws InvalidValidator, InvalidElementException {
         Map api = new HashMap();
         for (TypeElement te : annotations) {
             for (Element e : env.getElementsAnnotatedWith(te)) {
-
 
                 List<AnnotationWrapper> law = AnnotationWrapperFactory.createAnnotations(e);
 
@@ -145,8 +130,8 @@ public class AnnotationProcessor extends AbstractProcessor {
 
                         apiMethodPMW.setSuperTypes(processingEnv.getTypeUtils().directSupertypes(apiMethodPMW.getElement().asType()));
 
-                        Map<String, Object> mapMethod = null;
-                        Object objMapMethod = (Map<String, Object>) api.get(apiMethodPMW.getApi());
+                        Map<String, Object> mapMethod;
+                        Object objMapMethod = api.get(apiMethodPMW.getApi());
                         if (objMapMethod == null) {
                             mapMethod = new HashMap<>();
                             api.put(apiMethodPMW.getApi(), mapMethod);
@@ -155,7 +140,15 @@ public class AnnotationProcessor extends AbstractProcessor {
                         }
                         Map<String, Object> mapFields = new HashMap<>();
                         for (ApiField apiField : apiMethodPMW.getFields()) {
-                            mapFields.put(apiField.getName(), apiField.getValidationRules());
+                            Map<String, Object> annotationsMap = new HashMap<>();
+                            for (ValidationRule validationRule : apiField.getValidationRuleIterable()) {
+                                Map<String, Object> attributesMap = new HashMap<>();
+                                for (AnnotationMirrorAtribute annotationMirrorAtribute : validationRule.getAnnotationMirrorAttributes()) {
+                                    attributesMap.put(annotationMirrorAtribute.getKey(), annotationMirrorAtribute.getValue());
+                                }
+                                annotationsMap.put(validationRule.getAnnotationMirrorName(), attributesMap);
+                            }
+                            mapFields.put(apiField.getName(), annotationsMap);
                             splittedMap(mapMethod, apiMethodPMW.getMethod(), mapFields);
                         }
                     }
@@ -166,74 +159,8 @@ public class AnnotationProcessor extends AbstractProcessor {
         return api;
     }
 
-    private Set<Class<? extends Annotation>> getAnnotations(Object validator)
-            throws InvalidValidator {
-        Set<Class<? extends Annotation>> annotations = new HashSet<>();
-        Class<?> clazz = validator.getClass();
-        if (validator == null) {
-            throw new InvalidValidator("Validador vazio");
-        }
 
-        for (Method method : clazz.getMethods()) {
-            ValidationMethod vm = method.getAnnotation(ValidationMethod.class);
-            if (vm != null) {
-                if (!annotations.add(vm.value())) {
-                    throw new InvalidValidator("Validação repetida");
-                }
-            }
-        }
-
-        if (annotations.isEmpty()) {
-            throw new InvalidValidator("Validador sem validações");
-        }
-        return null;
-    }
-
-    private void testPrint(Class<?> clazz) {
-        Elements eu = processingEnv.getElementUtils();
-        //hPrinter.print(clazz.getPackage().getName()+"\n");
-
-        /*PackageElement pe = eu.getPackageElement(clazz.getPackage().getName());
-        for (TypeElement typeElement : ElementFilter.typesIn(pe.getEnclosedElements())) {
-            hPrinter.print(typeElement.toString() + "\n");
-        }*/
-    }
-
-    private boolean mapElement(Map api, ApiMethodPMW apiMethodPMW) throws InvalidValidator, InvalidElementException {
-        Map map;
-        Object objectMap;
-
-        if (apiMethodPMW != null) {
-            objectMap = api.get(apiMethodPMW.getApi());
-            if (objectMap == null) {
-                map = new HashMap();
-                api.put(apiMethodPMW.getApi(), map);
-            } else {
-                map = (Map) objectMap;
-            }
-            objectMap = api.get(apiMethodPMW.getApi());
-            if (objectMap != null) {
-                error("O nome do método " + apiMethodPMW.getMethod() + " já existe");
-                return true;
-            }
-            HashMap method = new HashMap<>();
-            api.put(apiMethodPMW.getMethod(), method);
-            apiMethodPMW.getFields();
-/*
-            List<VariableElement> fields = fieldsIn(apiMethodPMW.getEnclosedElements());
-            for (VariableElement field : fields) {
-                Map fieldMap = getFieldMap(field);
-                if (fieldMap != null) {
-                    String fieldName = field.getSimpleName().toString();
-                    method.put(fieldName, fieldMap);
-                }
-            }
-*/
-        }
-        return false;
-    }
-
-    private void splittedMap(Map<String,Object> map,String string,Object value){
+    private void splittedMap(Map<String, Object> map, String string, Object value) {
         String[] splittedKeys = string.split("\\.");
         Map currentMap = map;
         for (int i = 0; i < splittedKeys.length - 1; i++) {
@@ -247,24 +174,7 @@ public class AnnotationProcessor extends AbstractProcessor {
             }
             currentMap = newMap;
         }
-        currentMap.put(splittedKeys[splittedKeys.length-1],value);
-    }
-
-    private Map getFieldMap(VariableElement field) {
-        HashMap fieldMap = null;
-        for (AnnotationMirror annotationMirror : field.getAnnotationMirrors()) {
-
-            isMirrorOf(annotationMirror, Email.class);
-
-            if (fieldMap == null) {
-                fieldMap = new HashMap();
-            }
-            fieldMap.put(
-                    annotationMirror.toString(),
-                    annotationMirror.getElementValues().toString()
-            );
-        }
-        return fieldMap;
+        currentMap.put(splittedKeys[splittedKeys.length - 1], value);
     }
 
     public Map<String, ?> aliasMap() {
@@ -290,4 +200,5 @@ public class AnnotationProcessor extends AbstractProcessor {
         }
         return map;
     }
+
 }

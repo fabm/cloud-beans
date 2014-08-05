@@ -20,9 +20,9 @@ public class BeanChecker<V> {
         return validator;
     }
 
-    public <T> T check(Object object) {
+    public <T> T check(Object object) throws BeanCheckerException{
         Class<? extends Object> cl = object.getClass();
-        return check(object, cl, null);
+        return check(object, cl);
     }
 
     private boolean continueAfterRecursive() throws IllegalAccessException {
@@ -33,7 +33,7 @@ public class BeanChecker<V> {
         return field.get(validator) == null;
     }
 
-    private <T> T check(Object object, Class<? extends Object> cl, Object validator) {
+    private <T> T check(Object object, Class<? extends Object> cl) throws BeanCheckerException {
         Class<?> superCl = cl.getSuperclass();
         ApiMethodParameters superAmp = superCl.getAnnotation(ApiMethodParameters.class);
         try {
@@ -43,7 +43,7 @@ public class BeanChecker<V> {
             }
 
             if (superAmp != null) {
-                T ret = check(object, superCl, validator);
+                T ret = check(object, superCl);
                 if (!continueAfterRecursive()) {
                     return ret;
                 }
@@ -73,7 +73,7 @@ public class BeanChecker<V> {
                                 methodWrapper.method
                         )) {
                             if (!addVCAndContinue(validationContext)) {
-                                return (T) object;
+                                throw new BeanCheckerException(validationContext);
                             }
                         }
                     }
@@ -157,10 +157,10 @@ public class BeanChecker<V> {
         @Override
         public int compareTo(MethodWrapper o) {
             if (validationMethod.priority() > o.validationMethod.priority()) {
-                return 1;
+                return -1;
             }
             if (validationMethod.priority() < o.validationMethod.priority()) {
-                return -1;
+                return 1;
             }
             return 0;
         }
