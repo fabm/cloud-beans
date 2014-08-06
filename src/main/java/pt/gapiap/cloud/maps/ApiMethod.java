@@ -19,7 +19,6 @@ public class ApiMethod extends HashMap<String, ApiObject> implements ApiObject {
     private Logger logger;
     @Inject
     private Injector injector;
-    private String name;
     private ApiValidator apiValidator;
     private TypeElement typeElement;
 
@@ -29,16 +28,6 @@ public class ApiMethod extends HashMap<String, ApiObject> implements ApiObject {
         return Type.METHOD;
     }
 
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        logger.log("    name:" + name + "\n");
-        this.name = name;
-    }
 
     private void loadElement(TypeElement typeElement) {
         TypeElement superTypeElement = TypeUtils.getFromTEtoSuperTE(typeElement);
@@ -54,17 +43,18 @@ public class ApiMethod extends HashMap<String, ApiObject> implements ApiObject {
     }
 
     private void evaluateVariableElement(VariableElement variableElement, ApiValidator apiValidator) {
-        Set<AnnotationMirror> annotationMirrorSet = new HashSet<>();
+        Set<FieldAnnotation> fieldAnnotationSet = new HashSet<>();
         for (AnnotationMirror annotationMirror : variableElement.getAnnotationMirrors()) {
             logger.log("            :" + annotationMirror.getAnnotationType() + "\n");
-            if (apiValidator.hasAnnotation(annotationMirror)) {
-                annotationMirrorSet.add(annotationMirror);
+            FieldAnnotation fieldAnnotation = apiValidator.getFieldAnnotation(annotationMirror);
+            if (fieldAnnotation!=null) {
+                fieldAnnotationSet.add(fieldAnnotation);
             }
         }
         String apiFieldName = variableElement.getSimpleName().toString();
         ApiField apiField = injector.getInstance(ApiField.class);
         apiField.setName(apiFieldName);
-        apiField.loadField(annotationMirrorSet);
+        apiField.loadField(fieldAnnotationSet);
         logger.log("            :" + apiFieldName + "\n");
         put(apiFieldName, apiField);
     }
@@ -75,7 +65,7 @@ public class ApiMethod extends HashMap<String, ApiObject> implements ApiObject {
     }
 
 
-    public void resolveMethod() {
+    public void resolveMethod(String name) {
         ApiMethod apiMethod = injector.getInstance(ApiMethod.class);
         apiMethod.setApiValidator(this.apiValidator);
         apiMethod.setTypeElement(typeElement);

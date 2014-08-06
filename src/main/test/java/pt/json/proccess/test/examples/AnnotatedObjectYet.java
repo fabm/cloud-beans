@@ -5,7 +5,7 @@ import pt.gapiap.proccess.validation.DefaultValidator;
 import pt.gapiap.proccess.validation.annotations.Email;
 import pt.gapiap.proccess.validation.annotations.Required;
 
-@ApiMethodParameters(api = "testApi",method = "test.method.first.one",validator = DefaultValidator.class)
+@ApiMethodParameters(api = "testApi",method = "um.dois.quatro.quatro",validator = DefaultValidator.class)
 public class AnnotatedObjectYet {
     @Required
     private Integer testeInt;

@@ -3,6 +3,7 @@ package pt.gapiap.cloud.maps;
 import com.google.inject.Inject;
 import pt.gapiap.proccess.logger.Logger;
 import pt.gapiap.proccess.validation.ValidationMethod;
+import pt.gapiap.proccess.wrappers.Validation;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
@@ -12,6 +13,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ApiValidator extends HashMap<DeclaredType, ApiValidation> {
     @Inject
@@ -46,6 +48,7 @@ public class ApiValidator extends HashMap<DeclaredType, ApiValidation> {
         if (!containsKey(typeMirror)) {
             ApiValidation apiValidation = new ApiValidation();
             apiValidation.priority = validationMethod.priority();
+            apiValidation.alias = validationMethod.alias();
             put((DeclaredType) typeMirror, apiValidation);
         }
     }
@@ -61,15 +64,21 @@ public class ApiValidator extends HashMap<DeclaredType, ApiValidation> {
         return validator.equals(obj);
     }
 
-    public boolean hasAnnotation(AnnotationMirror annotationMirror) {
+
+    public FieldAnnotation getFieldAnnotation(AnnotationMirror annotationMirror) {
         String amTypeString = annotationMirror.getAnnotationType().toString();
-        for (DeclaredType key : this.keySet()) {
-            String keyString = key.toString();
+
+        for (Map.Entry<DeclaredType,ApiValidation> entry : this.entrySet()) {
+            String keyString = entry.getKey().toString();
+
             if (keyString.hashCode() == amTypeString.hashCode() &&
                     keyString.equals(amTypeString)) {
-                return true;
+                FieldAnnotation fieldAnnotation = new FieldAnnotation();
+                fieldAnnotation.setAnnotationMirror(annotationMirror);
+                fieldAnnotation.setApiValidation(entry.getValue());
+                return fieldAnnotation;
             }
         }
-        return false;
+        return null;
     }
 }

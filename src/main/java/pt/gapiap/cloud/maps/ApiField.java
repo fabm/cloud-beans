@@ -15,12 +15,15 @@ class ApiField extends HashMap<String, AnnotationValueMap> implements ApiObject 
     @Inject
     Injector injector;
 
-    void loadField(Set<AnnotationMirror> annotationMirrorSet) {
-        logger.log("            :"+name+":"+annotationMirrorSet.size()+"\n");
-        for (AnnotationMirror annotationMirror : annotationMirrorSet) {
-            String name = annotationMirror.getAnnotationType().toString();
+    void loadField(Set<FieldAnnotation> fieldAnnotationSet) {
+        logger.log("            :"+name+":"+fieldAnnotationSet.size()+"\n");
+        for (FieldAnnotation fieldAnnotation : fieldAnnotationSet) {
+            String name = fieldAnnotation.getApiValidation().getAlias();
+            if(name.isEmpty()){
+                name = fieldAnnotation.annotationMirror.getAnnotationType().toString();
+            }
             AnnotationValueMap annotationValueMap = injector.getInstance(AnnotationValueMap.class);
-            annotationValueMap.init(annotationMirror,name);
+            annotationValueMap.init(fieldAnnotation);
             put(name, annotationValueMap);
             logger.log("                :"+annotationValueMap+"\n");
         }
@@ -32,10 +35,6 @@ class ApiField extends HashMap<String, AnnotationValueMap> implements ApiObject 
         return Type.FIELD;
     }
 
-    @Override
-    public String getName() {
-        return name;
-    }
 
     void setName(String name) {
         this.name = name;

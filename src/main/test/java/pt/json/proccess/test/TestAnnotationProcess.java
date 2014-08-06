@@ -1,5 +1,6 @@
 package pt.json.proccess.test;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Guice;
@@ -7,9 +8,9 @@ import com.google.inject.Injector;
 import org.junit.Assert;
 import org.junit.Test;
 import pt.gapiap.cloud.maps.ApiMapper;
+import pt.gapiap.cloud.maps.ApiMethod;
 import pt.gapiap.convert.DeclaredTypeCv;
 import pt.gapiap.convert.TypeElementCv;
-import pt.gapiap.proccess.inject.AProcessorGM;
 import pt.gapiap.proccess.logger.Logger;
 import pt.gapiap.proccess.validation.DefaultValidator;
 import pt.json.proccess.test.apiMap.inject.AProcessorGMTest;
@@ -27,10 +28,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.MirroredTypeException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class TestAnnotationProcess {
 
@@ -98,7 +96,7 @@ public class TestAnnotationProcess {
         Map<String, Object> map = getValuesMap(createTypeElement(AnnotatedObject.class));
         Assert.assertEquals(createDeclaredType(DefaultValidator.class), map.get("validator"));
         Assert.assertEquals("testApi", map.get("api").toString());
-        Assert.assertEquals("test.method", map.get("method").toString());
+        Assert.assertEquals("um.dois.quatro.tres", map.get("method").toString());
         map = getValuesMap(createTypeElement(OtherAnnotatedObject.class));
         Assert.assertEquals(createDeclaredType(DefaultValidator.class), map.get("validator"));
         Assert.assertEquals("thisApi", map.get("api").toString());
@@ -117,6 +115,7 @@ public class TestAnnotationProcess {
         Assert.assertEquals("class injected 2 times", anotherModuleTest.getBindedSingletoneClass().toString());
     }
 
+
     @Test
     public void apiMap() {
         Injector injector = Guice.createInjector(new AProcessorGMTest());
@@ -124,8 +123,33 @@ public class TestAnnotationProcess {
         ApiMapper apiMapper = injector.getInstance(ApiMapper.class);
         apiMapper.init();
 
-        injector.getInstance(Logger.class).close();
-        System.out.println(apiMapper.getJsonPreatifyApisMap());
+        Assert.assertNotNull(apiMapper);
+        assertMethodsNames(
+                ImmutableMap.of(
+                        "testApi", ImmutableMap.of(
+                                "um", ImmutableMap.of(
+                                        "dois", ImmutableMap.of(
+                                                "quatro", ImmutableMap.of(
+                                                        "tres", 0,
+                                                        "quatro", 0
+                                                )
+                                        )
+                                )
+                        ),
+                        "thisApi", ImmutableMap.of(
+                                "myMethod", 0
+                        )
+                ), apiMapper
+        );
+    }
+
+    private void assertMethodsNames(ImmutableMap<String, ?> im, Map<String,?> check) {
+        for(Map.Entry<String,?> entry:im.entrySet()){
+            Assert.assertTrue(check.containsKey(entry.getKey()));
+            if(entry.getValue() instanceof ImmutableMap){
+                assertMethodsNames((ImmutableMap<String, ?>) entry.getValue(), (Map<String, ?>) check.get(entry.getKey()));
+            }
+        }
     }
 
     private Object[] createProxy() {

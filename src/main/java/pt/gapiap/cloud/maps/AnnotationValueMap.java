@@ -3,23 +3,27 @@ package pt.gapiap.cloud.maps;
 import com.google.inject.Inject;
 import pt.gapiap.proccess.logger.Logger;
 
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import java.util.HashMap;
 import java.util.Map;
 
 class AnnotationValueMap extends HashMap<String, Object> implements ApiObject {
-    private String name;
     @Inject
     private Logger logger;
 
 
-    public void init(AnnotationMirror annotationMirror, String name) {
-        this.name = name;
-        for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : annotationMirror.getElementValues().entrySet()) {
-            Object value = entry.getValue().getValue();
+    public void init(FieldAnnotation fieldAnnotation) {
+        int priority = fieldAnnotation.getApiValidation().getPriority();
+        if (priority != 0) {
+            put("priority", priority);
+        }
+        for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : fieldAnnotation.getAnnotationMirror().getElementValues().entrySet()) {
             String key = entry.getKey().getSimpleName().toString();
+            if (key.equals("priority")) {
+                throw new RuntimeException("'priority' is a reserved word doesn't be used in an annotation parameter");
+            }
+            Object value = entry.getValue().getValue();
             logger.log("                " + key + ":" + value + ":" + value.getClass() + "\n");
             put(key, value);
         }
@@ -31,8 +35,4 @@ class AnnotationValueMap extends HashMap<String, Object> implements ApiObject {
         return Type.ANNOTATION_MIRROR_VALUE_MAP;
     }
 
-    @Override
-    public String getName() {
-        return name;
-    }
 }

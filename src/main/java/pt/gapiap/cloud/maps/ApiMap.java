@@ -18,12 +18,6 @@ public class ApiMap extends HashMap<String, ApiObject> implements ApiObject {
         return Type.METHOD;
     }
 
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
     public void setName(String name) {
         this.name = name;
     }

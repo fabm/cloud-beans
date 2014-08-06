@@ -11,7 +11,7 @@ public class DefaultValidator {
     @ValidationContexts
     private ValidationContext<?> validationContext;
 
-    @ValidationMethod(value = Required.class, priority = 1)
+    @ValidationMethod(value = Required.class, priority = 1, alias = "required")
     public boolean valRequired(ValidationContext<Required> context) {
         nullable = true;
         if (context.isNull() ||
@@ -22,7 +22,7 @@ public class DefaultValidator {
         return true;
     }
 
-    @ValidationMethod(Email.class)
+    @ValidationMethod(value = Email.class, alias = "email")
     public boolean valEmail(ValidationContext<Email> context) {
         if (!nullable && context.isNull()) {
             return false;
@@ -30,7 +30,7 @@ public class DefaultValidator {
         return EmailChecker.check(context.getValue());
     }
 
-    @ValidationMethod(Size.class)
+    @ValidationMethod(value = Size.class, alias = "size")
     public boolean valSize(ValidationContext<Size> context) {
         if (!nullable && context.isNull()) {
             return false;
