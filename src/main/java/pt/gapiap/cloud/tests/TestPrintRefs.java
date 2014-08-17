@@ -1,21 +1,21 @@
 package pt.gapiap.cloud.tests;
 
 import com.google.inject.Inject;
+import pt.gapiap.proccess.ProcessorAction;
 import pt.gapiap.proccess.annotations.ApiMethodParameters;
 import pt.gapiap.proccess.logger.Logger;
 import pt.gapiap.utils.TypeUtils;
 
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.*;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.MirroredTypeException;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.*;
 import java.util.*;
 
-public class TestPrintRefs {
+public class TestPrintRefs implements ProcessorAction {
     @Inject
-    Logger logger;
+    private Logger logger;
+    @Inject
+    private RoundEnvironment env;
 
     Set<DeclaredType> declaredTypeSet;
     List<DeclaredType> declaredTypesList;
@@ -24,40 +24,6 @@ public class TestPrintRefs {
 
     public static TestPrintRefs create() {
         return new TestPrintRefs();
-    }
-
-
-    public void testMirros(RoundEnvironment env, Set<? extends TypeElement> annotations) {
-        logger.setTrace(false);
-        declaredTypeSet = new HashSet<>();
-        typeElementSet = new HashSet<>();
-        declaredTypesList = new ArrayList<>();
-        typeElementsList = new ArrayList<>();
-        StringBuilderWithIdentation sb = new StringBuilderWithIdentation(0);
-
-        for (TypeElement te : annotations) {
-            sb.addLineF("%-20s:%s", "annotation", te.getQualifiedName());
-
-            logger.log(sb.toString());
-            for (Element e : env.getElementsAnnotatedWith(te)) {
-                printElement(1, e);
-            }
-        }
-        logger.log("sets:\n");
-        for (DeclaredType declaredType : declaredTypeSet) {
-            logger.log("declared type:" + declaredType.toString() + "\n");
-        }
-        for (TypeElement typeElement : typeElementSet) {
-            logger.log("type elements:" + typeElement + "\n");
-
-        }
-        logger.log("lists:\n");
-        for (DeclaredType declaredType : declaredTypesList) {
-            logger.log("declared type:" + declaredType.toString() + "\n");
-        }
-        for (TypeElement typeElement : typeElementsList) {
-            logger.log("type elements:" + typeElement + "\n");
-        }
     }
 
     private StringBuilderWithIdentation printSuper(int level, TypeElement typeElement) {
@@ -136,12 +102,14 @@ public class TestPrintRefs {
             sb.addLineF("%-20s:%s", "api", annotation.api());
             sb.addLineF("%-20s:%s", "method", annotation.method());
             try {
-                sb.addLineF("%-20s:%s", "validator", annotation.validator().getSimpleName());
-            } catch (MirroredTypeException e) {
-                DeclaredType dt = (DeclaredType) e.getTypeMirror();
-                declaredTypeSet.add(dt);
-                declaredTypesList.add(dt);
-                sb.addLineF("%-20s:%s", "error", dt);
+                sb.addLineF("%-20s:%s", "validator", annotation.validators()[0].getSimpleName());
+            } catch (MirroredTypesException e) {
+                for(TypeMirror typeMirror:e.getTypeMirrors()){
+                    DeclaredType dt = (DeclaredType) typeMirror;
+                    declaredTypeSet.add(dt);
+                    declaredTypesList.add(dt);
+                    sb.addLineF("%-20s:%s", "error", dt);
+                }
             }
         }
         if (element.getKind() == ElementKind.CLASS) {
@@ -178,4 +146,38 @@ public class TestPrintRefs {
         }
     }
 
+    @Override
+    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        logger.setTrace(false);
+        declaredTypeSet = new HashSet<>();
+        typeElementSet = new HashSet<>();
+        declaredTypesList = new ArrayList<>();
+        typeElementsList = new ArrayList<>();
+        StringBuilderWithIdentation sb = new StringBuilderWithIdentation(0);
+
+        for (TypeElement te : annotations) {
+            sb.addLineF("%-20s:%s", "annotation", te.getQualifiedName());
+
+            logger.log(sb.toString());
+            for (Element e : env.getElementsAnnotatedWith(te)) {
+                printElement(1, e);
+            }
+        }
+        logger.log("sets:\n");
+        for (DeclaredType declaredType : declaredTypeSet) {
+            logger.log("declared type:" + declaredType.toString() + "\n");
+        }
+        for (TypeElement typeElement : typeElementSet) {
+            logger.log("type elements:" + typeElement + "\n");
+
+        }
+        logger.log("lists:\n");
+        for (DeclaredType declaredType : declaredTypesList) {
+            logger.log("declared type:" + declaredType.toString() + "\n");
+        }
+        for (TypeElement typeElement : typeElementsList) {
+            logger.log("type elements:" + typeElement + "\n");
+        }
+        return false;
+    }
 }

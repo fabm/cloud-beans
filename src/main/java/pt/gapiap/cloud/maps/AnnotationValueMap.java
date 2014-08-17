@@ -20,9 +20,6 @@ class AnnotationValueMap extends HashMap<String, Object> implements ApiObject {
         }
         for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : fieldAnnotation.getAnnotationMirror().getElementValues().entrySet()) {
             String key = entry.getKey().getSimpleName().toString();
-            if (key.equals("priority")) {
-                throw new RuntimeException("'priority' is a reserved word doesn't be used in an annotation parameter");
-            }
             Object value = entry.getValue().getValue();
             logger.log("                " + key + ":" + value + ":" + value.getClass() + "\n");
             put(key, value);

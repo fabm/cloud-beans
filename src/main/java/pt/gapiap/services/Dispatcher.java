@@ -1,17 +1,10 @@
 package pt.gapiap.services;
 
-import com.google.api.server.spi.response.UnauthorizedException;
 import pt.gapiap.cloud.endpoints.Authorization;
-import pt.gapiap.cloud.endpoints.CEError;
-import pt.gapiap.cloud.endpoints.CEReturn;
-import pt.gapiap.cloud.endpoints.GlobalError;
+import pt.gapiap.cloud.endpoints.errors.CEError;
 import pt.gapiap.proccess.annotations.ApiMethodParameters;
 import pt.gapiap.proccess.annotations.MappedAction;
-import pt.gapiap.proccess.validation.BeanChecker;
-import pt.gapiap.proccess.validation.BeanCheckerException;
-import pt.gapiap.proccess.validation.ValidationContext;
-import pt.gapiap.proccess.validation.annotations.Email;
-import pt.gapiap.proccess.validation.annotations.Required;
+import pt.gapiap.proccess.validation.bean.checker.BeanChecker;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -32,6 +25,13 @@ public class Dispatcher<R extends Enum<R>> {
         this.service = service;
         this.rolesAnnotationClass = rolesAnnotationClass;
         init();
+    }
+
+    private static ApiMethodParameters throwErrorIfNull(ApiMethodParameters apiMethodParameters) {
+        if (apiMethodParameters == null) {
+            throw new RuntimeException("The entry don't have the annotation " + ApiMethodParameters.class.getCanonicalName());
+        }
+        return apiMethodParameters;
     }
 
     private void init() {
@@ -81,17 +81,7 @@ public class Dispatcher<R extends Enum<R>> {
         }
     }
 
-    protected CEError getError(ValidationContext validationContext) {
-        Class<? extends Annotation> annotationType = validationContext.getAnnotation().annotationType();
-        if (annotationType == Required.class) {
-            return new CEError(GlobalError.REQUIRED, validationContext.getName());
-        } else if (annotationType == Email.class) {
-            return new CEError(GlobalError.EMAIL, validationContext.getValue().toString());
-        }
-        return null;
-    }
-
-    Object dispatch(Authorization<R, ?> authorization, String methodName, Object entry) throws CEError, UnauthorizedException {
+    Object dispatch(Authorization<R, ?> authorization, String methodName, Object entry) throws CEError {
 
         if (methodName == null && entry != null) {
             Class<?> entryClass = entry.getClass();
@@ -110,12 +100,8 @@ public class Dispatcher<R extends Enum<R>> {
 
 
         if (entry != null) {
-            BeanChecker beanChecker = new BeanChecker();
-            try {
-                beanChecker.check(entry);
-            } catch (BeanCheckerException e) {
-                throw getError(e.getValidationContext());
-            }
+            BeanChecker beanChecker = new BeanChecker(false);
+            beanChecker.check(entry);
         }
 
 
@@ -133,19 +119,12 @@ public class Dispatcher<R extends Enum<R>> {
                     throw new RuntimeException("Parameter type:" + parameterTypes[i].getCanonicalName() + " is unknown");
                 }
             }
-            return (CEReturn) method.invoke(service, values);
+            return method.invoke(service, values);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         } catch (InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private static ApiMethodParameters throwErrorIfNull(ApiMethodParameters apiMethodParameters) {
-        if (apiMethodParameters == null) {
-            throw new RuntimeException("The entry don't have the annotation " + ApiMethodParameters.class.getCanonicalName());
-        }
-        return apiMethodParameters;
     }
 
 }

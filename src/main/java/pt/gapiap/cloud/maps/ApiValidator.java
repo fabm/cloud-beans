@@ -3,7 +3,6 @@ package pt.gapiap.cloud.maps;
 import com.google.inject.Inject;
 import pt.gapiap.proccess.logger.Logger;
 import pt.gapiap.proccess.validation.ValidationMethod;
-import pt.gapiap.proccess.wrappers.Validation;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
@@ -18,18 +17,43 @@ import java.util.Map;
 public class ApiValidator extends HashMap<DeclaredType, ApiValidation> {
     @Inject
     Logger logger;
-    private DeclaredType validator;
+    private List<? extends TypeMirror> validators;
 
-    public DeclaredType getValidator() {
-        return validator;
+    public List<? extends TypeMirror> getValidator() {
+        return validators;
     }
 
-    public void setValidator(DeclaredType validator) {
-        this.validator = validator;
+    public boolean hasSameTypes(List<? extends TypeMirror> typeMirrors) {
+        for (TypeMirror typeMirror : typeMirrors) {
+            if (!hasTypeMirror(typeMirror)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean hasTypeMirror(TypeMirror typeMirror) {
+        for (TypeMirror thisTypeMirror : validators) {
+            if (thisTypeMirror.toString().equals(typeMirror.toString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void setValidators(List<? extends TypeMirror> validators) {
+        this.validators = validators;
     }
 
     void init() {
-        List<ExecutableElement> methods = ElementFilter.methodsIn(validator.asElement().getEnclosedElements());
+        for (TypeMirror typeMirror : validators) {
+            initValidator(typeMirror);
+        }
+    }
+
+    private void initValidator(TypeMirror typeMirror) {
+        DeclaredType declaredType = (DeclaredType) typeMirror;
+        List<ExecutableElement> methods = ElementFilter.methodsIn(declaredType.asElement().getEnclosedElements());
         for (ExecutableElement executableElement : methods) {
             ValidationMethod validationMethod = executableElement.getAnnotation(ValidationMethod.class);
             if (validationMethod != null) {
@@ -54,21 +78,10 @@ public class ApiValidator extends HashMap<DeclaredType, ApiValidation> {
     }
 
 
-    @Override
-    public int hashCode() {
-        return validator.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return validator.equals(obj);
-    }
-
-
     public FieldAnnotation getFieldAnnotation(AnnotationMirror annotationMirror) {
         String amTypeString = annotationMirror.getAnnotationType().toString();
 
-        for (Map.Entry<DeclaredType,ApiValidation> entry : this.entrySet()) {
+        for (Map.Entry<DeclaredType, ApiValidation> entry : this.entrySet()) {
             String keyString = entry.getKey().toString();
 
             if (keyString.hashCode() == amTypeString.hashCode() &&

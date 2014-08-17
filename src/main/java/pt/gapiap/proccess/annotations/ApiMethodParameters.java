@@ -11,5 +11,5 @@ import java.lang.annotation.Target;
 public @interface ApiMethodParameters {
     String method();
     String api();
-    Class<?> validator();
+    Class<?>[] validators();
 }

@@ -10,8 +10,8 @@ import pt.gapiap.proccess.logger.Logger;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.MirroredTypeException;
+import javax.lang.model.type.MirroredTypesException;
+import javax.lang.model.type.TypeMirror;
 import java.util.*;
 
 public class ApiMapper extends Hashtable<String, ApiMethod> {
@@ -24,14 +24,14 @@ public class ApiMapper extends Hashtable<String, ApiMethod> {
     private Injector injector;
 
 
-    private ApiValidator getOrCreateValidator(DeclaredType declaredType) {
+    private ApiValidator getOrCreateValidator(List<? extends TypeMirror> typeMirrors) {
         for (ApiValidator apiValidator : validatorSet) {
-            if (apiValidator.getValidator().equals(declaredType)) {
+            if (apiValidator.hasSameTypes(typeMirrors)) {
                 return apiValidator;
             }
         }
         ApiValidator apiValidator = injector.getInstance(ApiValidator.class);
-        apiValidator.setValidator(declaredType);
+        apiValidator.setValidators(typeMirrors);
         apiValidator.init();
         validatorSet.add(apiValidator);
         return apiValidator;
@@ -78,14 +78,15 @@ public class ApiMapper extends Hashtable<String, ApiMethod> {
         for (Element element : elementSet) {
             ApiMethodParameters annotation = element.getAnnotation(ApiMethodParameters.class);
             try {
-                annotation.validator();
-            } catch (MirroredTypeException e) {
+                annotation.validators();
+            } catch (MirroredTypesException e) {
                 logger.log(annotation.api() + " : " + annotation.method() + "\n");
-                logger.log(e.getTypeMirror().toString() + "\n");
-                ApiValidator apiValidator = getOrCreateValidator((DeclaredType) e.getTypeMirror());
-                //this cast is possible because the target of ApiMethodParameters @Target is ElementType.TYPE
+                ApiValidator apiValidator = getOrCreateValidator(e.getTypeMirrors());
+                //this cast is possible because the target of @ApiMethodParameters Target is ElementType.TYPE
                 addMethodsPath(annotation.api(), annotation.method(), apiValidator, (TypeElement) element);
-                logger.log(this + "\n");
+            } catch (NullPointerException e) {
+               //if the the annotation is null the error must be after the annotations processor to see the line where
+               // the symbol it's unknown
             }
         }
     }

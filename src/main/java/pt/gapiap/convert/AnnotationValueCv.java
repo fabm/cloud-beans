@@ -5,7 +5,7 @@ import javax.lang.model.element.AnnotationValueVisitor;
 import javax.lang.model.type.MirroredTypeException;
 
 public class AnnotationValueCv implements AnnotationValue {
-    Object value;
+    private Object value;
 
     public AnnotationValueCv(Object value) {
         this.value = value;

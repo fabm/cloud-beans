@@ -4,9 +4,9 @@ package pt.gapiap.proccess.logger;
 import java.io.PrintWriter;
 
 public class Logger {
-    private PrintWriter printWriter;
     private boolean debug = true;
     private boolean trace = true;
+    private PrintWriter printWriter;
 
     public Logger(PrintWriter printWriter) {
         this.printWriter = printWriter;
@@ -80,6 +80,10 @@ public class Logger {
                 printWriter.println(ste.getClassName() + "#" + ste.getMethodName() + ":" + ste.getLineNumber());
             }
         }
+    }
+
+    public void printLn(String string){
+        log(string+"\n",4);
     }
 
     public void logStack() {

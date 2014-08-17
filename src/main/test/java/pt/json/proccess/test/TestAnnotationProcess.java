@@ -1,18 +1,22 @@
 package pt.json.proccess.test;
 
+import com.google.common.base.Defaults;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 import pt.gapiap.cloud.maps.ApiMapper;
-import pt.gapiap.cloud.maps.ApiMethod;
 import pt.gapiap.convert.DeclaredTypeCv;
 import pt.gapiap.convert.TypeElementCv;
+import pt.gapiap.proccess.annotations.ApiMethodParameters;
+import pt.gapiap.proccess.json.writer.AnProcWriters;
 import pt.gapiap.proccess.logger.Logger;
-import pt.gapiap.proccess.validation.DefaultValidator;
+import pt.gapiap.proccess.validation.bean.checker.proxy.mark.AnnotationProxyMark;
+import pt.gapiap.proccess.validation.bean.checker.proxy.mark.AnnotationProxyMarkWOriginal;
+import pt.gapiap.proccess.validation.defaultValidator.DefaultValidator;
 import pt.json.proccess.test.apiMap.inject.AProcessorGMTest;
 import pt.json.proccess.test.examples.AnnotatedObject;
 import pt.json.proccess.test.examples.ClassWithStaticMethod;
@@ -28,7 +32,15 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.MirroredTypeException;
-import java.util.*;
+import javax.validation.constraints.Size;
+import java.lang.reflect.Array;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 public class TestAnnotationProcess {
 
@@ -78,8 +90,8 @@ public class TestAnnotationProcess {
         typeElements.add(createTypeElement(AnnotatedObject.class));
         typeElements.add(createTypeElement(OtherAnnotatedObject.class));
 
-        Assert.assertEquals(2, declaredTypes.size());
-        Assert.assertEquals(2, typeElements.size());
+        assertEquals(2, declaredTypes.size());
+        assertEquals(2, typeElements.size());
 
         declaredTypes.add(createDeclaredType(AnnotatedObject.class));
         declaredTypes.add(createDeclaredType(OtherAnnotatedObject.class));
@@ -87,32 +99,21 @@ public class TestAnnotationProcess {
         typeElements.add(createTypeElement(AnnotatedObject.class));
         typeElements.add(createTypeElement(OtherAnnotatedObject.class));
 
-        Assert.assertEquals(2, declaredTypes.size());
-        Assert.assertEquals(2, typeElements.size());
+        assertEquals(2, declaredTypes.size());
+        assertEquals(2, typeElements.size());
     }
 
-    @Test
-    public void printAnnotation() {
-        Map<String, Object> map = getValuesMap(createTypeElement(AnnotatedObject.class));
-        Assert.assertEquals(createDeclaredType(DefaultValidator.class), map.get("validator"));
-        Assert.assertEquals("testApi", map.get("api").toString());
-        Assert.assertEquals("um.dois.quatro.tres", map.get("method").toString());
-        map = getValuesMap(createTypeElement(OtherAnnotatedObject.class));
-        Assert.assertEquals(createDeclaredType(DefaultValidator.class), map.get("validator"));
-        Assert.assertEquals("thisApi", map.get("api").toString());
-        Assert.assertEquals("myMethod", map.get("method").toString());
-    }
 
     @Test
     public void testGuice() {
         Injector injector = Guice.createInjector(new MyModule());
 
         ModuleTest moduleTest = injector.getInstance(ModuleTest.class);
-        Assert.assertEquals("this class is binded", moduleTest.getBindedClass().toString());
-        Assert.assertEquals("class injected 1 times", moduleTest.getBindedSingletoneClass().toString());
+        assertEquals("this class is binded", moduleTest.getBindedClass().toString());
+        assertEquals("class injected 1 times", moduleTest.getBindedSingletoneClass().toString());
 
         AnotherModuleTest anotherModuleTest = injector.getInstance(AnotherModuleTest.class);
-        Assert.assertEquals("class injected 2 times", anotherModuleTest.getBindedSingletoneClass().toString());
+        assertEquals("class injected 2 times", anotherModuleTest.getBindedSingletoneClass().toString());
     }
 
 
@@ -123,7 +124,7 @@ public class TestAnnotationProcess {
         ApiMapper apiMapper = injector.getInstance(ApiMapper.class);
         apiMapper.init();
 
-        Assert.assertNotNull(apiMapper);
+        assertNotNull(apiMapper);
         assertMethodsNames(
                 ImmutableMap.of(
                         "testApi", ImmutableMap.of(
@@ -143,10 +144,10 @@ public class TestAnnotationProcess {
         );
     }
 
-    private void assertMethodsNames(ImmutableMap<String, ?> im, Map<String,?> check) {
-        for(Map.Entry<String,?> entry:im.entrySet()){
-            Assert.assertTrue(check.containsKey(entry.getKey()));
-            if(entry.getValue() instanceof ImmutableMap){
+    private void assertMethodsNames(ImmutableMap<String, ?> im, Map<String, ?> check) {
+        for (Map.Entry<String, ?> entry : im.entrySet()) {
+            assertTrue(check.containsKey(entry.getKey()));
+            if (entry.getValue() instanceof ImmutableMap) {
                 assertMethodsNames((ImmutableMap<String, ?>) entry.getValue(), (Map<String, ?>) check.get(entry.getKey()));
             }
         }
@@ -166,7 +167,7 @@ public class TestAnnotationProcess {
     public void loggerInjection() {
         Injector injector = Guice.createInjector(new AProcessorGMTest());
         Logger logger = injector.getInstance(Logger.class);
-        Assert.assertNotNull(logger);
+        assertNotNull(logger);
         logger.log("ola mundo\n");
         logger.getPrintWriter().flush();
     }
@@ -180,7 +181,7 @@ public class TestAnnotationProcess {
 
         proxyController.whenCallGetOriginalResponse("testProxy");
 
-        Assert.assertEquals("test proxy", proxy.testProxy());
+        assertEquals("test proxy", proxy.testProxy());
     }
 
 
@@ -192,7 +193,7 @@ public class TestAnnotationProcess {
 
         proxyController.when("testProxy", "altered response");
 
-        Assert.assertEquals("altered response", proxy.testProxy());
+        assertEquals("altered response", proxy.testProxy());
 
     }
 
@@ -202,8 +203,70 @@ public class TestAnnotationProcess {
         testMap.put("10", 10);
         testMap.put("20", 20);
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        Assert.assertNotNull(testMap);
+        assertNotNull(testMap);
         System.out.println(gson.toJson(testMap));
+    }
+
+    @Test
+    public void reflectTypeArrayOfClasses() {
+        ApiMethodParameters annotation = AnnotatedObject.class.getAnnotation(ApiMethodParameters.class);
+        try {
+            int[] intArray = {0, 1};
+
+            assertTrue(intArray.getClass().isArray());
+            assertTrue(intArray.getClass().getComponentType().isPrimitive());
+
+            assertEquals(2, Array.getLength(intArray));
+
+            Class<?> returnType = ApiMethodParameters.class.getDeclaredMethod("validators").getReturnType();
+            assertTrue(returnType.isArray());
+            assertEquals(Class.class, returnType.getComponentType());
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void recursiveInjection() {
+        Injector injector = Guice.createInjector(new AProcessorGMTest());
+        Logger logger = injector.getInstance(Logger.class);
+        AnProcWriters writers = injector.getInstance(AnProcWriters.class);
+        assertSame(logger, writers.getlogger());
+    }
+
+    @Test
+    public void printMethodsCalled() {
+        Size size = mock(Size.class);
+        when(size.max()).thenReturn(6);
+        when(size.min()).thenReturn(2);
+
+        when(size.annotationType()).thenReturn((Class)Size.class);
+
+        AnnotationProxyMark<Size> apmSize = new AnnotationProxyMarkWOriginal<>(size,new HashMap<String,Object>());
+
+        Size apmSizeProxy = apmSize.getProxy();
+        assertEquals(2, apmSizeProxy.min());
+        assertEquals(6, apmSizeProxy.max());
+
+        assertEquals(2, apmSize.valuesMap().get("min"));
+        assertEquals(6, apmSize.valuesMap().get("max"));
+
+
+        AnnotationTest annotationTest = mock(AnnotationTest.class);
+        when(annotationTest.classTest()).thenReturn(null);
+        when(annotationTest.testPrimitiveInt()).thenReturn(2);
+
+
+        when(annotationTest.annotationType()).thenReturn((Class) AnnotationTest.class);
+        AnnotationProxyMark<AnnotationTest> apmTest = new AnnotationProxyMarkWOriginal<>(annotationTest, new HashMap<String,Object>());
+        AnnotationTest apmTestProxy = apmTest.getProxy();
+
+        assertNull(apmTestProxy.classTest());
+        assertEquals(2, apmTestProxy.testPrimitiveInt());
+
+        assertNull(apmTest.valuesMap().get("classTest"));
+        assertEquals(2, apmTest.valuesMap().get("testPrimitiveInt"));
+
     }
 
 }

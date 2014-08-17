@@ -1,7 +1,5 @@
 package pt.gapiap.utils;
 
-import pt.gapiap.cloud.maps.ApiObject;
-
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;

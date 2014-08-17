@@ -1,4 +1,4 @@
-package pt.utils;
+package utils;
 
 public class UtilStrings {
 

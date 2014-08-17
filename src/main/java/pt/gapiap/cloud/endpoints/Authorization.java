@@ -1,9 +1,9 @@
 package pt.gapiap.cloud.endpoints;
 
 
-import com.google.api.server.spi.response.UnauthorizedException;
 import com.google.appengine.api.users.User;
 import com.google.appengine.api.utils.SystemProperty;
+import pt.gapiap.cloud.endpoints.errors.CEError;
 import pt.gapiap.services.AuthorizationArea;
 
 
@@ -24,17 +24,11 @@ public abstract class Authorization<R extends Enum<R>, U extends UserWithRoles<R
         }
     }
 
-    protected UnauthorizedException createNotAuthenticatedError(String area) {
-        return new UnauthorizedException(String.format(GlobalError.NOT_AUTHENTICATED.getMsg(), area));
-    }
-
-    protected UnauthorizedException createNotAuthorizedError(String area) {
-        return new UnauthorizedException(String.format(GlobalError.NOT_AUTHORIZED.getMsg(), area));
-    }
 
     public void checkDevMode() {
         if (SystemProperty.Environment.Value.Development != SystemProperty.Environment.Value.Development) {
-            createNotAuthenticatedError("only authorized in devmode");
+
+            //new CEError(GlobalError.NOT_AUTHORIZED, ImmutableMap.of("area", "devmode"));
         }
     }
 
@@ -90,15 +84,18 @@ public abstract class Authorization<R extends Enum<R>, U extends UserWithRoles<R
     }
 
 
-    public void check(AuthorizationArea<R> authorizationArea) throws UnauthorizedException {
+    public void check(AuthorizationArea<R> authorizationArea) throws CEError {
         if (authorizationArea == null) {
             return;
         }
         if (userWithRoles == null) {
-            throw createNotAuthenticatedError(authorizationArea.getArea());
+            //TODO corrigir CEError espera uma area
+            //throw new CEError(GlobalError.NOT_AUTHENTICATED, ImmutableMap.of("area", "current"));
         }
         if (!hasRoles(authorizationArea.getRoles())) {
-            throw createNotAuthorizedError(authorizationArea.getArea());
+            //TODO corrigir CEError espera uma area
+            //throw new CEError(GlobalError.NOT_AUTHORIZED, ImmutableMap.of("area", "current"));
         }
     }
+
 }

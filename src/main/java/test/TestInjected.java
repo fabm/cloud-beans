@@ -1,4 +1,4 @@
-package pt.test;
+package test;
 
 import java.io.PrintWriter;
 

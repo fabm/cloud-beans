@@ -1,8 +1,5 @@
 package pt.gapiap.services;
 
-import javax.management.relation.Role;
-import java.util.Enumeration;
-
 public class AuthorizationArea<R extends Enum<R>> {
     private String area;
 

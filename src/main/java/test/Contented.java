@@ -1,4 +1,4 @@
-package pt.test;
+package test;
 
 import com.google.inject.Inject;
 import pt.gapiap.proccess.logger.Logger;

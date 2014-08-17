@@ -1,9 +1,7 @@
 package pt.gapiap.services;
 
-import com.google.api.server.spi.response.UnauthorizedException;
-import com.google.appengine.api.users.User;
 import pt.gapiap.cloud.endpoints.Authorization;
-import pt.gapiap.cloud.endpoints.CEError;
+import pt.gapiap.cloud.endpoints.errors.CEError;
 import pt.gapiap.cloud.endpoints.CEReturn;
 
 public class CEDispatcher<R extends Enum<R>> implements CEReturn {
@@ -44,7 +42,7 @@ public class CEDispatcher<R extends Enum<R>> implements CEReturn {
     }
 
     @Override
-    public Object getCEResponse() throws CEError, UnauthorizedException {
+    public Object getCEResponse() throws CEError {
         dispatcher.injectFields(authorization);
         return dispatcher.dispatch(authorization,methodName,entry);
     }

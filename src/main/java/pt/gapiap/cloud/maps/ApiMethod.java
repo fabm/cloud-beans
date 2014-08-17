@@ -2,6 +2,7 @@ package pt.gapiap.cloud.maps;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import pt.gapiap.proccess.annotations.Embedded;
 import pt.gapiap.proccess.logger.Logger;
 import pt.gapiap.utils.TypeUtils;
 
@@ -9,6 +10,7 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.ElementFilter;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,8 +40,17 @@ public class ApiMethod extends HashMap<String, ApiObject> implements ApiObject {
             return;
         }
         for (VariableElement variableElement : ElementFilter.fieldsIn(typeElement.getEnclosedElements())) {
-            evaluateVariableElement(variableElement, apiValidator);
+            if (isEmbedded(variableElement)) {
+                DeclaredType declaredType = (DeclaredType) variableElement.asType();
+                loadElement((TypeElement) declaredType.asElement());
+            } else {
+                evaluateVariableElement(variableElement, apiValidator);
+            }
         }
+    }
+
+    private boolean isEmbedded(VariableElement variableElement) {
+        return variableElement.getAnnotation(Embedded.class) != null;
     }
 
     private void evaluateVariableElement(VariableElement variableElement, ApiValidator apiValidator) {
@@ -47,7 +58,7 @@ public class ApiMethod extends HashMap<String, ApiObject> implements ApiObject {
         for (AnnotationMirror annotationMirror : variableElement.getAnnotationMirrors()) {
             logger.log("            :" + annotationMirror.getAnnotationType() + "\n");
             FieldAnnotation fieldAnnotation = apiValidator.getFieldAnnotation(annotationMirror);
-            if (fieldAnnotation!=null) {
+            if (fieldAnnotation != null) {
                 fieldAnnotationSet.add(fieldAnnotation);
             }
         }
@@ -70,8 +81,6 @@ public class ApiMethod extends HashMap<String, ApiObject> implements ApiObject {
         apiMethod.setApiValidator(this.apiValidator);
         apiMethod.setTypeElement(typeElement);
         apiMethod.loadElement(apiMethod.typeElement);
-        logger.log("            :" + apiMethod.size() + "\n");
-        logger.log("            :" + apiMethod + "\n");
         put(name, apiMethod);
     }
 
