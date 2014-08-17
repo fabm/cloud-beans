@@ -1,0 +1,5 @@
+{
+    "1": ["It's not possible to access the area ", "area"],
+    "2": ["It's mandatory to be authenticated to enter at ", "area"," area"],
+    "3": ["An unexpected error occurred, please contact the administrator"]
+}

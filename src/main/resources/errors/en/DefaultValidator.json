@@ -1,0 +1,7 @@
+{
+    "1": ["The field ", "field", " is required"],
+    "2": ["The field ", "field", " it's malformed"],
+    "3": ["The field ", "field", " must be grater than ", "min", " and lesser than ", "min"],
+    "4": ["The field ", "field", " must be grater than ", "min"],
+    "5": ["The field ", "field", " must be lesser than ", "max"]
+}

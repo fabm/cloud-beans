@@ -1,0 +1,7 @@
+{
+    "1": ["O campo ", "field", " é obrigatório"],
+    "2": ["O campo ", "field", " não é um mail válido"],
+    "3": ["O campo ", "field", " deve ser maior do que ", "min"," e menor do que ","max"],
+    "4": ["O campo ", "field", " deve ser maior do que ", "min"],
+    "5": ["O campo ", "field", " deve ser menor do que ", "max"]
+}
