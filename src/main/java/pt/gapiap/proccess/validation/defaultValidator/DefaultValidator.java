@@ -1,9 +1,12 @@
 package pt.gapiap.proccess.validation.defaultValidator;
 
 import pt.gapiap.proccess.validation.EmailChecker;
+import pt.gapiap.proccess.validation.ValidationClass;
 import pt.gapiap.proccess.validation.ValidationMethod;
 import pt.gapiap.proccess.validation.annotations.Email;
 import pt.gapiap.proccess.validation.bean.checker.ValidationContext;
+import pt.gapiap.proccess.validation.defaultValidator.languages.DefaultValidatorErrorContents;
+import pt.gapiap.proccess.validation.defaultValidator.languages.DefaultValidatorErrorArea;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -12,72 +15,104 @@ import javax.validation.constraints.Size;
 import java.lang.reflect.Array;
 import java.util.Collection;
 
+@ValidationClass(DefaultValidatorErrorArea.class)
 public class DefaultValidator {
 
-    private boolean nullable = true;
+  private boolean nullable = true;
 
-    @ValidationMethod(value = NotNull.class, priority = 1, alias = "required", error = 1)
-    public boolean valRequired(ValidationContext<NotNull> context) {
-        nullable = false;
-        return context.isNull() || context.isEmptyString();
+  @ValidationMethod(value = NotNull.class, priority = 1, failCode = DefaultValidatorErrorContents.NOT_NULL)
+  public boolean valRequired(ValidationContext<NotNull> context) {
+    nullable = false;
+    if (!(context.isNull() || context.isEmptyString())) {
+      return true;
     }
 
-    @ValidationMethod(value = Email.class, alias = "email", error = 2)
-    public boolean valEmail(ValidationContext<Email> context) {
-        return !(context.isAPermittedNull(nullable) || EmailChecker.check(context));
+    context.failArgs().add(context.getLocalFieldName());
+
+    return false;
+  }
+
+  @ValidationMethod(value = Email.class, failCode = DefaultValidatorErrorContents.EMAIL)
+  public boolean valEmail(ValidationContext<Email> context) {
+    if (context.isAPermittedNull(nullable) || EmailChecker.check(context.getValue())) {
+      return true;
     }
 
-    private int valueForSize(ValidationContext<?> context) {
-        if (context.isCollection()) {
-            Collection<?> colletion = (Collection<?>) context.getValue();
-            return colletion.size();
-        } else if (context.isArryay()) {
-            return Array.getLength(context.getValue());
-        } else if (context.isString()) {
-            return context.getValue().toString().length();
-        } else {
-            return (Integer) context.getValue();
-        }
+    context.failArgs().add(context.getLocalFieldName());
+
+    return false;
+  }
+
+  private int valueForSize(ValidationContext<?> context) {
+    if (context.isCollection()) {
+      Collection<?> colletion = (Collection<?>) context.getValue();
+      return colletion.size();
+    } else if (context.isArryay()) {
+      return Array.getLength(context.getValue());
+    } else if (context.isString()) {
+      return context.getValue().toString().length();
+    } else {
+      return (Integer) context.getValue();
+    }
+  }
+
+  @ValidationMethod(value = Size.class, failCode = DefaultValidatorErrorContents.SIZE)
+  public boolean valSize(ValidationContext<Size> context) {
+    if (context.isAPermittedNull(nullable)) {
+      return true;
+    }
+    int value = valueForSize(context);
+
+    Size size = context.getAnnotation();
+
+    if (value > size.min() && value < size.max()) {
+      return true;
     }
 
-    @ValidationMethod(value = Size.class, alias = "size", error = 3)
-    public boolean valSize(ValidationContext<Size> context) {
-        if (context.isAPermittedNull(nullable)) {
-            return true;
-        }
-        int value = valueForSize(context);
+    Collection<Object> failArgs = context.failArgs();
 
-        Size sizeProxy = context.getAnnotationProxy().getProxy();
+    failArgs.add(context.getName());
+    failArgs.add(size.min());
+    failArgs.add(size.max());
 
-        if (value > sizeProxy.min() &&
-                value < sizeProxy.max()) {
-            return true;
-        }
-        return false;
+    return false;
+  }
+
+  @ValidationMethod(value = Min.class, failCode = DefaultValidatorErrorContents.MIN)
+  public boolean valMin(ValidationContext<Min> context) {
+    if (context.isAPermittedNull(nullable)) {
+      return true;
+    }
+    int value = valueForSize(context);
+
+    if (value > context.getAnnotation().value()) {
+      return true;
     }
 
-    @ValidationMethod(value = Min.class, alias = "size", error = 4)
-    public boolean valMin(ValidationContext<Min> context) {
-        if (context.isAPermittedNull(nullable)) {
-            return true;
-        }
-        int value = valueForSize(context);
+    Collection<Object> failArgs = context.failArgs();
 
-        if (value > context.getAnnotationProxy().getProxy().value()) {
-            return true;
-        }
-        return false;
+    failArgs.add(context.getLocalFieldName());
+    failArgs.add(context.getAnnotation().value());
+
+    return false;
+  }
+
+  @ValidationMethod(value = Max.class, failCode = DefaultValidatorErrorContents.MAX)
+  public boolean valMax(ValidationContext<Max> context) {
+    if (context.isAPermittedNull(nullable)) {
+      return true;
+    }
+    int value = valueForSize(context);
+
+    Max annotation = context.getAnnotation();
+
+    if (value < annotation.value()) {
+      return true;
     }
 
-    @ValidationMethod(value = Max.class, alias = "size", error = 5)
-    public boolean valMax(ValidationContext<Max> context) {
-        if (context.isAPermittedNull(nullable)) {
-            return true;
-        }
-        int value = valueForSize(context);
+    context.failArgs().add(context.getLocalFieldName());
+    context.failArgs().add(annotation.value());
 
-        Max maxProxy = context.getAnnotationProxy().getProxy();
-
-        return value < maxProxy.value();
-    }
+    return false;
+  }
 }

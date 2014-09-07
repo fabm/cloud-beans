@@ -7,6 +7,5 @@ import java.lang.annotation.*;
 public @interface ValidationMethod {
     Class<? extends Annotation> value();
     int priority() default 0;
-    String alias() default "";
-    int error();
+    int failCode();
 }

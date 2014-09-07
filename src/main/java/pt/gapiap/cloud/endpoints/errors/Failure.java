@@ -1,24 +1,40 @@
 package pt.gapiap.cloud.endpoints.errors;
 
-import java.util.Map;
-
 public class Failure {
-    private String name;
-    private Map<String, Object> vars;
+    private int code;
+    private FailTemplate failTemplate;
+    private Object[] vars;
 
-    public Map<String, Object> getVars() {
-        return vars;
-    }
-
-    public void setVars(Map<String, Object> vars) {
+    public Failure(int code, FailTemplate failTemplate, Object[] vars) {
+        this.code = code;
+        this.failTemplate = failTemplate;
         this.vars = vars;
     }
 
-    public String getName() {
-        return name;
+    public int getCode() {
+        return code;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setCode(int code) {
+        this.code = code;
+    }
+
+    public FailTemplate getFailTemplate() {
+        return failTemplate;
+    }
+
+    public void setFailTemplate(FailTemplate failTemplate) {
+        this.failTemplate = failTemplate;
+    }
+
+    public Object[] getVars() {
+        return vars;
+    }
+
+    public void setVars(Object[] vars) {
+        this.vars = vars;
+    }
+    public String render(){
+        return failTemplate.render(vars);
     }
 }

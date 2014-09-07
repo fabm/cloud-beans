@@ -1,96 +1,35 @@
 package pt.gapiap.proccess.validation.bean.checker;
 
-
-import pt.gapiap.proccess.validation.bean.checker.proxy.mark.AnnotationProxyMark;
-import pt.gapiap.proccess.validation.bean.checker.proxy.mark.AnnotationProxyMarkWOriginal;
-
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
-public class ValidationContext<T extends Annotation> {
-    AnnotationProxyMark<T> annotationProxyMark;
-    private Field field;
-    private Object object;
-    private T annotation;
-    private Map<String, Object> mapReturnedValues;
+public interface ValidationContext<T extends Annotation> {
 
-    public Map<String, Object> getMapReturnedValues() {
-        if (mapReturnedValues == null) {
-            mapReturnedValues.put("field",getName());
-            mapReturnedValues = new HashMap<>();
-        }
-        return mapReturnedValues;
-    }
+  Collection<Object> failArgs();
 
-    public void setMapReturnedValues(Map<String, Object> mapReturnedValues) {
-        this.mapReturnedValues = mapReturnedValues;
-    }
+  boolean isNull();
 
-    public AnnotationProxyMark<T> getAnnotationProxy() {
-        if (annotationProxyMark == null) {
-            annotationProxyMark = new AnnotationProxyMarkWOriginal<>(annotation, getMapReturnedValues());
-        }
-        return annotationProxyMark;
-    }
+  T getAnnotation();
 
-    public boolean isNull() {
-        return getValue() == null;
-    }
+  Class<?> getType();
 
-    public T getAnnotation() {
-        return annotation;
-    }
+  String getName();
 
-    public Class<?> getType() {
-        return field.getType();
-    }
+  boolean isString();
 
-    public String getName() {
-        return field.getName();
-    }
+  boolean isCollection();
 
-    public boolean isString() {
-        return getType() == String.class;
-    }
+  boolean isArryay();
 
-    public boolean isCollection() {
-        return getType().isAssignableFrom(Collection.class);
-    }
+  boolean isAPermittedNull(boolean permitted);
 
-    public boolean isArryay() {
-        return getType().isArray();
-    }
+  boolean isEmptyString();
 
-    public boolean isAPermittedNull(boolean permitted) {
-        return permitted && isNull();
-    }
+  Object getValue();
 
-    public boolean isEmptyString() {
-        return getType() == String.class && getValue().toString().isEmpty();
-    }
+  void setValue(Object value);
 
-    public Object getValue() {
-        try {
-            return field.get(object);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
+  String getLocalFieldName();
 
-    public void setValue(Object value) {
-        try {
-            field.set(object, value);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Object getContainer() {
-        return object;
-    }
-
-
+  Object getContainer();
 }

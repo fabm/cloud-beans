@@ -1,21 +1,19 @@
 package pt.gapiap.proccess.validation.bean.checker;
 
-import java.util.Map;
+import com.google.common.collect.Sets;
+
+import java.util.Set;
 
 public class SimpleChecker implements Checker {
-    private Map<String,?> failure;
+  private FailedField failedField;
 
-    @Override
-    public void check(CheckResult checkResult) {
-        BeanCheckerException beanCheckerException = new BeanCheckerException();
-        //todo ver onde posso por aqui o failure
-        //beanCheckerException.validationContext = validationContext;
-        throw beanCheckerException;
-    }
+  @Override
+  public void add(FailedField failedField) {
+    this.failedField = failedField;
+  }
 
-    @Override
-    public Map<String, ?> getFailures() {
-        return failure;
-    }
-
+  @Override
+  public Set<FailedField> getFailedFields() {
+    return Sets.newHashSet(failedField);
+  }
 }

@@ -72,7 +72,6 @@ public class ApiValidator extends HashMap<DeclaredType, ApiValidation> {
         if (!containsKey(typeMirror)) {
             ApiValidation apiValidation = new ApiValidation();
             apiValidation.priority = validationMethod.priority();
-            apiValidation.alias = validationMethod.alias();
             put((DeclaredType) typeMirror, apiValidation);
         }
     }

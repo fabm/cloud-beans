@@ -1,22 +1,22 @@
 package pt.gapiap.proccess.validation.bean.checker;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
-public class CheckerAcomulator implements Checker{
-    Map<String,Map<String,?>> map;
+public class CheckerAcomulator implements Checker {
+  private Set<FailedField> failedFields;
 
-    public CheckerAcomulator() {
-        map = new HashMap<>();
-    }
+  public CheckerAcomulator() {
+    failedFields = new HashSet<>();
+  }
 
-    @Override
-    public void check(CheckResult checkResult) {
-        Map<String, ?> current = map.get(checkResult.getFieldName());
-    }
+  @Override
+  public void add(FailedField failedField) {
+    failedFields.add(failedField);
+  }
 
-    @Override
-    public Map<String, ?> getFailures() {
-        return null;
-    }
+  @Override
+  public Set<FailedField> getFailedFields() {
+    return failedFields;
+  }
 }

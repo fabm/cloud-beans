@@ -16,7 +16,6 @@ class ApiField extends HashMap<String, AnnotationValueMap> implements ApiObject 
 
     void loadField(Set<FieldAnnotation> fieldAnnotationSet) {
         for (FieldAnnotation fieldAnnotation : fieldAnnotationSet) {
-            String name = fieldAnnotation.getApiValidation().getAlias();
             if(name.isEmpty()){
                 name = fieldAnnotation.annotationMirror.getAnnotationType().toString();
             }

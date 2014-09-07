@@ -52,7 +52,7 @@ public class AProcessorGM extends AbstractModule implements EnvironmentRun {
         bind(AnProcWriters.class).toInstance(new AnProcWritersImpl(logger,processingEnv));
         bind(Logger.class).toInstance(logger);
         //Alternate to tests implementations
-        bind(ProcessorAction.class).to(ApiProcessor.class);
+        bind(ProcessorAction.class).to(TestSimpleProcessActionImp.class);
         bind(EnvironmentRun.class).toInstance(this);
     }
 

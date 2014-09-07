@@ -3,6 +3,7 @@ package pt.gapiap.proccess;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+@Deprecated
 public class Bundle {
     private ResourceBundle resourceBundle;
 

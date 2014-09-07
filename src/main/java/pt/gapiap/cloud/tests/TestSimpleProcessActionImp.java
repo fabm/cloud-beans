@@ -23,6 +23,11 @@ public class TestSimpleProcessActionImp implements ProcessorAction {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        //return callProcess(annotations, roundEnv);
+        return false;
+    }
+
+    private boolean callProcess(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         for (TypeElement typeElement : annotations) {
             logger.printLn(typeElement.getQualifiedName().toString());
             Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(ApiMethodParameters.class);
