@@ -2,22 +2,11 @@ package pt.gapiap.cloud.endpoints.errors;
 
 import java.text.MessageFormat;
 
-public class ParamterizedFailTemplate implements FailTemplate {
+public class ParamterizedErrorTemplate implements ErrorTemplate {
     private String message;
-    private boolean client;
 
-    public ParamterizedFailTemplate(String message,boolean client) {
+    public ParamterizedErrorTemplate(String message) {
         this.message = message;
-        this.client = client;
-    }
-    public ParamterizedFailTemplate(String message) {
-        this.message = message;
-        this.client = false;
-    }
-
-    @Override
-    public boolean isClientError() {
-        return client;
     }
 
     @Override
@@ -37,4 +26,9 @@ public class ParamterizedFailTemplate implements FailTemplate {
         MessageFormat messageFormat = new MessageFormat(message);
         return messageFormat.format(args);
     }
+
+  @Override
+  public Type getType() {
+    return Type.PARAMETRIZED;
+  }
 }

@@ -6,7 +6,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import org.junit.Test;
-import pt.gapiap.errors.ErrorManager;
+import pt.gapiap.cloud.endpoints.errors.ErrorManager;
 import pt.gapiap.proccess.validation.LocaleFieldName;
 import pt.gapiap.proccess.validation.bean.checker.BeanChecker;
 import pt.gapiap.proccess.validation.bean.checker.FailedField;
@@ -23,6 +23,8 @@ public class RuntimeTests {
   Module guiceModule = new AbstractModule() {
     @Override
     protected void configure() {
+      //Todo ver se estão associados os erros
+
       ErrorManager errorManager = new ErrorManager();
       DefaultValidatorErrorArea defaultValidatorErrorArea = new DefaultValidatorErrorArea(errorManager);
 

@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import pt.gapiap.cloud.endpoints.errors.CEError;
 import pt.gapiap.cloud.endpoints.errors.GlobalError;
-import pt.gapiap.cloud.endpoints.errors.language.GlobalContents;
+import pt.gapiap.cloud.endpoints.errors.language.GlobalContent;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
@@ -33,18 +33,22 @@ class ServiceInvokeHandler implements InvocationHandler {
   }
 
   private Object callMethod(Method method, Object[] args) throws IllegalAccessException, InvocationTargetException {
-    Optional<Annotation> opAuthorizationAnnotation = Optional.fromNullable(method.getAnnotation(rolesCapturer.getAnnotationClass()));
+    try {
+      Optional<Annotation> opAuthorizationAnnotation = Optional.fromNullable(method.getAnnotation(rolesCapturer.getAnnotationClass()));
 
-    if (opAuthorizationAnnotation.isPresent()) {
-      Enum[] roles = rolesCapturer.getRoles(opAuthorizationAnnotation.get());
-      Authorization authorization = authorizationContext.getAuthorization();
+      if (opAuthorizationAnnotation.isPresent()) {
+        Enum[] roles = rolesCapturer.getRoles(opAuthorizationAnnotation.get());
+        Authorization authorization = authorizationContext.getAuthorization();
 
-      if (!authorization.hasRoles(roles)) {
-        throw globalError.create(GlobalContents.NOT_AUTHORIZED, language, method.getName());
+        if (!authorization.hasRoles(roles)) {
+          throw globalError.create(GlobalContent.NOT_AUTHORIZED, language, method.getName());
+        }
       }
-    }
 
-    return method.invoke(authorizationContext.getService(), args);
+      return method.invoke(authorizationContext.getService(), args);
+    } catch (RuntimeException e) {
+      throw globalError.create(GlobalContent.UNEXPECTED, language);
+    }
   }
 
 

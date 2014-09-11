@@ -1,13 +1,16 @@
 package pt.gapiap.cloud.endpoints.errors;
 
+/**
+ * Failure is container of vars to render an error
+ */
 public class Failure {
     private int code;
-    private FailTemplate failTemplate;
+    private ErrorTemplate errorTemplate;
     private Object[] vars;
 
-    public Failure(int code, FailTemplate failTemplate, Object[] vars) {
+    public Failure(int code, ErrorTemplate errorTemplate, Object[] vars) {
         this.code = code;
-        this.failTemplate = failTemplate;
+        this.errorTemplate = errorTemplate;
         this.vars = vars;
     }
 
@@ -19,12 +22,12 @@ public class Failure {
         this.code = code;
     }
 
-    public FailTemplate getFailTemplate() {
-        return failTemplate;
+    public ErrorTemplate getErrorTemplate() {
+        return errorTemplate;
     }
 
-    public void setFailTemplate(FailTemplate failTemplate) {
-        this.failTemplate = failTemplate;
+    public void setErrorTemplate(ErrorTemplate errorTemplate) {
+        this.errorTemplate = errorTemplate;
     }
 
     public Object[] getVars() {
@@ -35,6 +38,6 @@ public class Failure {
         this.vars = vars;
     }
     public String render(){
-        return failTemplate.render(vars);
+        return errorTemplate.render(vars);
     }
 }

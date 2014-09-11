@@ -3,7 +3,7 @@ package pt.gapiap.proccess.validation.bean.checker;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import pt.gapiap.errors.ErrorArea;
+import pt.gapiap.cloud.endpoints.errors.ErrorArea;
 import pt.gapiap.proccess.annotations.ApiMethodParameters;
 import pt.gapiap.proccess.validation.ValidationClass;
 import pt.gapiap.proccess.validation.ValidationMethod;

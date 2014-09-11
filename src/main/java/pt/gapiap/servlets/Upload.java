@@ -18,9 +18,9 @@ import com.google.appengine.repackaged.org.codehaus.jackson.JsonNode;
 import com.google.appengine.repackaged.org.codehaus.jackson.map.ObjectMapper;
 import com.google.inject.Inject;
 import pt.gapiap.cloud.endpoints.authorization.UserWithRoles;
-import pt.gapiap.cloud.endpoints.errors.FailTemplate;
+import pt.gapiap.cloud.endpoints.errors.ErrorTemplate;
 import pt.gapiap.cloud.endpoints.errors.GlobalError;
-import pt.gapiap.cloud.endpoints.errors.language.GlobalContents;
+import pt.gapiap.cloud.endpoints.errors.language.GlobalContent;
 import pt.gapiap.cloudEndpoints.services.annotations.InstanceType;
 import pt.gapiap.cloudEndpoints.services.annotations.PhotoUploadClass;
 import pt.gapiap.cloudEndpoints.services.annotations.PhotoUploadMethod;
@@ -158,7 +158,7 @@ public abstract class Upload extends HttpServlet {
     try {
       map.put("email", getCurrentUserEmail(token));
     } catch (UnauthorizedException e) {
-      throw globalError.create(GlobalContents.NOT_AUTHORIZED, req.getLocale().getLanguage());
+      throw globalError.create(GlobalContent.NOT_AUTHORIZED, req.getLocale().getLanguage());
     }
     addObjectMapper(res);
   }
@@ -246,7 +246,7 @@ public abstract class Upload extends HttpServlet {
         out = method.invoke(instance, parameterValues);
       } catch (InvocationTargetException e) {
         Throwable target = e.getTargetException();
-        if (target instanceof FailTemplate) {
+        if (target instanceof ErrorTemplate) {
           //todo corrigir
           //out = ceReturnTransformer.transformTo(((CEError) target));
         }

@@ -2,8 +2,8 @@ package pt.gapiap.proccess.validation.bean.checker;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import pt.gapiap.cloud.endpoints.errors.FailTemplate;
-import pt.gapiap.errors.ErrorArea;
+import pt.gapiap.cloud.endpoints.errors.ErrorTemplate;
+import pt.gapiap.cloud.endpoints.errors.ErrorArea;
 import pt.gapiap.proccess.annotations.Embedded;
 import pt.gapiap.proccess.validation.LocaleFieldName;
 import pt.gapiap.proccess.validation.LocaleFieldNameDefault;
@@ -23,7 +23,7 @@ import java.util.Set;
  * </p>
  * <p>
  * It's required to inject members of BeanChecker instance, with {@link com.google.inject.Injector#injectMembers(Object)} after its creation.
- * These procedure is to assignee the singleton {@link pt.gapiap.errors.ErrorArea}'s which should be present in the {@link com.google.inject.Module} of
+ * These procedure is to assignee the singleton {@link pt.gapiap.cloud.endpoints.errors.ErrorArea}'s which should be present in the {@link com.google.inject.Module} of
  * Guice injection
  * </p>
  */
@@ -141,11 +141,11 @@ public class BeanChecker {
   private void validates(ValidationContext<?> validationContext, ValidationMethodChecker validationMethodChecker, ErrorArea errorArea) {
     boolean checkedResult = validationMethodChecker.checkValidation(validationContext);
     if (!checkedResult) {
-      FailTemplate failTemplate = errorArea.getFailTemplate(validationMethodChecker.failCode(), language);
+      ErrorTemplate errorTemplate = errorArea.getFailTemplate(validationMethodChecker.failCode(), language);
 
       FailedFieldImpl failedField = new FailedFieldImpl();
 
-      failedField.setMessage(failTemplate.render(validationContext.failArgs().toArray()));
+      failedField.setMessage(errorTemplate.render(validationContext.failArgs().toArray()));
 
       failedField.setField(validationContext.getName());
 

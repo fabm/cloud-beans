@@ -1,23 +1,26 @@
 package pt.gapiap.servlets.language;
 
-import pt.gapiap.errors.ErrorArea;
-import pt.gapiap.errors.ErrorManager;
+import com.google.common.collect.ImmutableList;
+import pt.gapiap.cloud.endpoints.errors.ErrorArea;
+import pt.gapiap.cloud.endpoints.errors.ErrorContent;
+import pt.gapiap.cloud.endpoints.errors.ErrorManager;
 import pt.gapiap.servlets.language.en.UploadErrorsContentEN;
 import pt.gapiap.servlets.language.pt.UploadErrorsContentPT;
 
+import java.util.List;
+
 public class ErrorUpload extends ErrorArea {
-    public ErrorUpload(ErrorManager errorManager) {
-        super(errorManager);
-    }
+  public ErrorUpload(ErrorManager errorManager) {
+    super(errorManager);
+  }
 
-    @Override
-    public int getSize() {
-        return 4;
-    }
+  @Override
+  protected List<? extends ErrorContent> getErrorContents() {
+    return ImmutableList.of(new UploadErrorsContentPT(), new UploadErrorsContentEN());
+  }
 
-    @Override
-    protected void init() {
-        setArrayLanguage("pt",new UploadErrorsContentPT());
-        setArrayLanguage("en",new UploadErrorsContentEN());
-    }
+  @Override
+  protected int[] getClientErrorIndexes() {
+    return null;
+  }
 }

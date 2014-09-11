@@ -1,6 +1,6 @@
 package pt.gapiap.proccess.validation;
 
-import pt.gapiap.errors.ErrorArea;
+import pt.gapiap.cloud.endpoints.errors.ErrorArea;
 
 import java.lang.annotation.*;
 

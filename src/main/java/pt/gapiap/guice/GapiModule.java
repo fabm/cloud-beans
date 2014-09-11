@@ -3,7 +3,7 @@ package pt.gapiap.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import pt.gapiap.cloud.endpoints.errors.GlobalError;
-import pt.gapiap.errors.ErrorManager;
+import pt.gapiap.cloud.endpoints.errors.ErrorManager;
 
 public class GapiModule extends AbstractModule{
   @Override

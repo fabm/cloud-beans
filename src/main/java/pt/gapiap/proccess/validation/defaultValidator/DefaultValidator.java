@@ -5,7 +5,7 @@ import pt.gapiap.proccess.validation.ValidationClass;
 import pt.gapiap.proccess.validation.ValidationMethod;
 import pt.gapiap.proccess.validation.annotations.Email;
 import pt.gapiap.proccess.validation.bean.checker.ValidationContext;
-import pt.gapiap.proccess.validation.defaultValidator.languages.DefaultValidatorErrorContents;
+import pt.gapiap.proccess.validation.defaultValidator.languages.DefaultValidatorErrorContent;
 import pt.gapiap.proccess.validation.defaultValidator.languages.DefaultValidatorErrorArea;
 
 import javax.validation.constraints.Max;
@@ -20,7 +20,7 @@ public class DefaultValidator {
 
   private boolean nullable = true;
 
-  @ValidationMethod(value = NotNull.class, priority = 1, failCode = DefaultValidatorErrorContents.NOT_NULL)
+  @ValidationMethod(value = NotNull.class, priority = 1, failCode = DefaultValidatorErrorContent.NOT_NULL)
   public boolean valRequired(ValidationContext<NotNull> context) {
     nullable = false;
     if (!(context.isNull() || context.isEmptyString())) {
@@ -32,7 +32,7 @@ public class DefaultValidator {
     return false;
   }
 
-  @ValidationMethod(value = Email.class, failCode = DefaultValidatorErrorContents.EMAIL)
+  @ValidationMethod(value = Email.class, failCode = DefaultValidatorErrorContent.EMAIL)
   public boolean valEmail(ValidationContext<Email> context) {
     if (context.isAPermittedNull(nullable) || EmailChecker.check(context.getValue())) {
       return true;
@@ -56,7 +56,7 @@ public class DefaultValidator {
     }
   }
 
-  @ValidationMethod(value = Size.class, failCode = DefaultValidatorErrorContents.SIZE)
+  @ValidationMethod(value = Size.class, failCode = DefaultValidatorErrorContent.SIZE)
   public boolean valSize(ValidationContext<Size> context) {
     if (context.isAPermittedNull(nullable)) {
       return true;
@@ -78,7 +78,7 @@ public class DefaultValidator {
     return false;
   }
 
-  @ValidationMethod(value = Min.class, failCode = DefaultValidatorErrorContents.MIN)
+  @ValidationMethod(value = Min.class, failCode = DefaultValidatorErrorContent.MIN)
   public boolean valMin(ValidationContext<Min> context) {
     if (context.isAPermittedNull(nullable)) {
       return true;
@@ -97,7 +97,7 @@ public class DefaultValidator {
     return false;
   }
 
-  @ValidationMethod(value = Max.class, failCode = DefaultValidatorErrorContents.MAX)
+  @ValidationMethod(value = Max.class, failCode = DefaultValidatorErrorContent.MAX)
   public boolean valMax(ValidationContext<Max> context) {
     if (context.isAPermittedNull(nullable)) {
       return true;

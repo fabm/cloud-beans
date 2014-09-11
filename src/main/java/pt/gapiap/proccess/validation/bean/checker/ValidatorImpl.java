@@ -1,6 +1,6 @@
 package pt.gapiap.proccess.validation.bean.checker;
 
-import pt.gapiap.errors.ErrorArea;
+import pt.gapiap.cloud.endpoints.errors.ErrorArea;
 
 import java.util.List;
 
