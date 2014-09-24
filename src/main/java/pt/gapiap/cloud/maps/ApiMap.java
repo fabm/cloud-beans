@@ -5,7 +5,7 @@ import java.util.HashMap;
 public class ApiMap extends HashMap<String, ApiObject> implements ApiObject {
 
     private String name;
-    private ApiValidator apiValidator;
+    private ApiValidationMap apiValidationMap;
 
 
     public void add(String method) {
@@ -26,7 +26,7 @@ public class ApiMap extends HashMap<String, ApiObject> implements ApiObject {
 
     }
 
-    public void setApiValidator(ApiValidator apiValidator) {
-        this.apiValidator = apiValidator;
+    public void setApiValidationMap(ApiValidationMap apiValidationMap) {
+        this.apiValidationMap = apiValidationMap;
     }
 }

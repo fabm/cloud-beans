@@ -1,12 +1,10 @@
 package pt.gapiap.proccess.validation.defaultValidator;
 
 import pt.gapiap.proccess.validation.EmailChecker;
-import pt.gapiap.proccess.validation.ValidationClass;
 import pt.gapiap.proccess.validation.ValidationMethod;
 import pt.gapiap.proccess.validation.annotations.Email;
 import pt.gapiap.proccess.validation.bean.checker.ValidationContext;
 import pt.gapiap.proccess.validation.defaultValidator.languages.DefaultValidatorErrorContent;
-import pt.gapiap.proccess.validation.defaultValidator.languages.DefaultValidatorErrorArea;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -15,7 +13,6 @@ import javax.validation.constraints.Size;
 import java.lang.reflect.Array;
 import java.util.Collection;
 
-@ValidationClass(DefaultValidatorErrorArea.class)
 public class DefaultValidator {
 
   private boolean nullable = true;

@@ -2,7 +2,9 @@ package pt.gapiap.cloud.endpoints.errors;
 
 import pt.gapiap.cloud.endpoints.errors.ErrorTemplate;
 
-public interface ErrorContent {
+import java.util.Map;
+
+public interface ErrorContent extends Iterable<Map.Entry<Integer, ErrorTemplate>>{
   String getLanguage();
-  ErrorTemplate[] getErrorTemplates();
+  Map<String,?> getArgs();
 }

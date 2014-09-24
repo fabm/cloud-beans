@@ -3,9 +3,7 @@ package pt.gapiap.proccess.validation.bean.checker;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import pt.gapiap.cloud.endpoints.errors.ErrorArea;
 import pt.gapiap.proccess.annotations.ApiMethodParameters;
-import pt.gapiap.proccess.validation.ValidationClass;
 import pt.gapiap.proccess.validation.ValidationMethod;
 import pt.gapiap.runtime.reflection.ReflectField;
 
@@ -60,9 +58,6 @@ public class ValidatorCenter {
 
   private Validator createValidationErrorContext(ReflectField reflectField) {
     Class<?> validationClass = reflectField.getBaseClass();
-    ValidationClass validationClassAnnotation = validationClass.getAnnotation(ValidationClass.class);
-    checkNotNull(validationClassAnnotation, "A validator must have the annotation " + ValidationClass.class.getName() + "annotation");
-    Class<? extends ErrorArea> errorAreaClass = validationClassAnnotation.value();
 
     List<ValidationMethodChecker> list = new ArrayList<>();
     for (Method method : validationClass.getDeclaredMethods()) {
@@ -77,7 +72,7 @@ public class ValidatorCenter {
 
     }
 
-    return new ValidatorImpl(validationClass, injector.getInstance(errorAreaClass), list);
+    return new ValidatorImpl(validationClass, list);
   }
 
 }

@@ -18,14 +18,15 @@ import com.google.appengine.repackaged.org.codehaus.jackson.JsonNode;
 import com.google.appengine.repackaged.org.codehaus.jackson.map.ObjectMapper;
 import com.google.inject.Inject;
 import pt.gapiap.cloud.endpoints.authorization.UserWithRoles;
+import pt.gapiap.cloud.endpoints.errors.ErrorManager;
 import pt.gapiap.cloud.endpoints.errors.ErrorTemplate;
-import pt.gapiap.cloud.endpoints.errors.GlobalError;
+import pt.gapiap.cloud.endpoints.errors.GlobalErrorArea;
 import pt.gapiap.cloud.endpoints.errors.language.GlobalContent;
 import pt.gapiap.cloudEndpoints.services.annotations.InstanceType;
 import pt.gapiap.cloudEndpoints.services.annotations.PhotoUploadClass;
 import pt.gapiap.cloudEndpoints.services.annotations.PhotoUploadMethod;
 import pt.gapiap.cloudEndpoints.services.annotations.PhotoUploadedKey;
-import pt.gapiap.servlets.language.ErrorUpload;
+import pt.gapiap.servlets.language.UploadErrorArea;
 import pt.gapiap.servlets.language.UploadErrorsContent;
 
 import javax.servlet.ServletException;
@@ -45,9 +46,7 @@ public abstract class Upload extends HttpServlet {
   private static final NetHttpTransport HTTP_TRANSPORT = new NetHttpTransport();
   private static Map<String, UploadClassMethod> uploadMethodMap;
   @Inject
-  private ErrorUpload errorsUpload;
-  @Inject
-  private GlobalError globalError;
+  private ErrorManager errorManager;
 
 
   static {
@@ -152,13 +151,13 @@ public abstract class Upload extends HttpServlet {
     List<String> params = UrlParameters.getParameters(req);
     Map<String, Object> map = new HashMap<String, Object>();
     if (!params.isEmpty()) {
-      throw errorsUpload.create(UploadErrorsContent.NO_ACTION_PARAMETER, req.getLocale().getCountry());
+      throw errorManager.create(UploadErrorsContent.NO_ACTION_PARAMETER, req.getLocale().getCountry());
     }
     String token = params.get(0);
     try {
       map.put("email", getCurrentUserEmail(token));
     } catch (UnauthorizedException e) {
-      throw globalError.create(GlobalContent.NOT_AUTHORIZED, req.getLocale().getLanguage());
+      throw errorManager.create(GlobalContent.NOT_AUTHORIZED, req.getLocale().getLanguage());
     }
     addObjectMapper(res);
   }
@@ -175,7 +174,7 @@ public abstract class Upload extends HttpServlet {
     try {
       String action = req.getParameter("action");
       if (action == null || action.isEmpty()) {
-        throw errorsUpload.create(UploadErrorsContent.NO_ACTION_PARAMETER, req.getLocale().getLanguage());
+        throw errorManager.create(UploadErrorsContent.NO_ACTION_PARAMETER, req.getLocale().getLanguage());
       }
 
       UploadClassMethod<? extends UserWithRoles> uploadClassMethod = uploadMethodMap.get(action);

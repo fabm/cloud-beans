@@ -10,8 +10,6 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.server.spi.response.UnauthorizedException;
 import com.google.appengine.repackaged.org.codehaus.jackson.JsonNode;
 import com.google.appengine.repackaged.org.codehaus.jackson.map.ObjectMapper;
-import com.google.inject.Singleton;
-import com.google.inject.servlet.RequestScoped;
 
 import java.io.IOException;
 

@@ -11,8 +11,8 @@ import javax.validation.constraints.Size;
 public class OtherAnnotatedObject {
     @NotNull
     @Email
-    String emailRequired;
+    private String emailRequired;
 
     @Size(min = 2, max = 4)
-    int myInt;
+    private int myInt;
 }

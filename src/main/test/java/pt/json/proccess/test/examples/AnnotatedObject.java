@@ -1,7 +1,5 @@
 package pt.json.proccess.test.examples;
 
-import pt.gapiap.cloudEndpoints.configuration.ValidatorConfiguration;
-import pt.gapiap.cloudEndpoints.configuration.Message;
 import pt.gapiap.proccess.annotations.ApiMethodParameters;
 import pt.gapiap.proccess.validation.annotations.Email;
 import pt.gapiap.proccess.validation.defaultValidator.DefaultValidator;
@@ -12,24 +10,24 @@ import javax.validation.constraints.NotNull;
 public class AnnotatedObject {
 
 
-    @NotNull
-    private Integer testeInt;
-    @Email
-    private String email;
+  @NotNull
+  private Integer testeInt;
+  @Email
+  private String email;
 
-    public Integer getTesteInt() {
-        return testeInt;
-    }
+  public Integer getTesteInt() {
+    return testeInt;
+  }
 
-    public void setTesteInt(Integer testeInt) {
-        this.testeInt = testeInt;
-    }
+  public void setTesteInt(Integer testeInt) {
+    this.testeInt = testeInt;
+  }
 
-    public String getEmail() {
-        return email;
-    }
+  public String getEmail() {
+    return email;
+  }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+  public void setEmail(String email) {
+    this.email = email;
+  }
 }

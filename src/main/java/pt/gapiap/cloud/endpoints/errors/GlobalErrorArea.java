@@ -5,12 +5,9 @@ import com.google.inject.Inject;
 import pt.gapiap.cloud.endpoints.errors.language.en.GlobalContentEN;
 import pt.gapiap.cloud.endpoints.errors.language.pt.GlobalContentPT;
 
-public class GlobalError extends ErrorArea {
+import java.util.Map;
 
-  @Inject
-  public GlobalError(ErrorManager errorManager) {
-    super(errorManager);
-  }
+public class GlobalErrorArea extends ErrorArea {
 
   @Override
   protected ImmutableList<? extends ErrorContent> getErrorContents() {
@@ -18,9 +15,13 @@ public class GlobalError extends ErrorArea {
   }
 
   @Override
-  protected int[] getClientErrorIndexes() {
+  protected Map<String, ?> getArgumentsMap(int index) {
     return null;
   }
 
+  @Override
+  protected int[] getClientErrorIndexes() {
+    return null;
+  }
 
 }

@@ -90,7 +90,7 @@ public class ListCv<O, C> implements List<C> {
 
     @Override
     public int hashCode() {
-        throw new UnsupportedOperationException();
+        return this.original.hashCode();
     }
 
     @Override

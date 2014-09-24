@@ -2,8 +2,9 @@ package pt.gapiap.proccess.validation.bean.checker;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import pt.gapiap.cloud.endpoints.errors.ErrorTemplate;
 import pt.gapiap.cloud.endpoints.errors.ErrorArea;
+import pt.gapiap.cloud.endpoints.errors.ErrorManager;
+import pt.gapiap.cloud.endpoints.errors.ErrorTemplate;
 import pt.gapiap.proccess.annotations.Embedded;
 import pt.gapiap.proccess.validation.LocaleFieldName;
 import pt.gapiap.proccess.validation.LocaleFieldNameDefault;
@@ -23,7 +24,8 @@ import java.util.Set;
  * </p>
  * <p>
  * It's required to inject members of BeanChecker instance, with {@link com.google.inject.Injector#injectMembers(Object)} after its creation.
- * These procedure is to assignee the singleton {@link pt.gapiap.cloud.endpoints.errors.ErrorArea}'s which should be present in the {@link com.google.inject.Module} of
+ * These procedure is to assignee the singleton {@link pt.gapiap.cloud.endpoints.errors.ErrorArea}'s which should be present in the {@link com.google.inject
+ * .Module} of
  * Guice injection
  * </p>
  */
@@ -34,11 +36,12 @@ public class BeanChecker {
 
   @Inject
   private Injector injector;
+  @Inject
+  private ErrorManager errorManager;
+
   private LocaleFieldName localeFieldName;
 
-  //todo completar javadoc
   /**
-   *
    * @param checkAllErrors
    * @param language
    * @param localeFieldName
@@ -114,11 +117,11 @@ public class BeanChecker {
 
   private void validatingErrorContexts(ReflectField reflectField, Validator validator) {
     for (ValidationMethodChecker validationMethodChecker : validator.getValidationList()) {
-      validateField(reflectField, validationMethodChecker, validator.getErrorArea());
+      validateField(reflectField, validationMethodChecker);
     }
   }
 
-  private void validateField(ReflectField reflectField, ValidationMethodChecker validationMethodChecker, ErrorArea errorArea) {
+  private void validateField(ReflectField reflectField, ValidationMethodChecker validationMethodChecker) {
 
     Annotation annotation = reflectField.getField().getAnnotation(validationMethodChecker.annotationValidation());
     if (annotation != null) {
@@ -128,7 +131,7 @@ public class BeanChecker {
       if (!validationMethodChecker.annotationValidation().equals(annotation.annotationType())) {
         return;
       }
-      validates(new ValidationContextImpl<>(reflectField, annotation, localeFieldName, language), validationMethodChecker, errorArea);
+      validates(new ValidationContextImpl<>(reflectField, annotation, localeFieldName, language), validationMethodChecker);
     }
   }
 
@@ -138,10 +141,10 @@ public class BeanChecker {
     }
   }
 
-  private void validates(ValidationContext<?> validationContext, ValidationMethodChecker validationMethodChecker, ErrorArea errorArea) {
+  private void validates(ValidationContext<?> validationContext, ValidationMethodChecker validationMethodChecker) {
     boolean checkedResult = validationMethodChecker.checkValidation(validationContext);
     if (!checkedResult) {
-      ErrorTemplate errorTemplate = errorArea.getFailTemplate(validationMethodChecker.failCode(), language);
+      ErrorTemplate errorTemplate = errorManager.getFailTemplate(validationMethodChecker.failCode(), language);
 
       FailedFieldImpl failedField = new FailedFieldImpl();
 

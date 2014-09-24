@@ -31,7 +31,7 @@ public class Logger {
     private void traceLog(int position) {
         if (trace) {
             StackTraceElement sTrace = Thread.currentThread().getStackTrace()[position];
-            printWriter.printf("%20s#%30s %3d:", sTrace.getFileName(), sTrace.getMethodName(), sTrace.getLineNumber());
+            printWriter.printf("%40s#%30s %3d:", sTrace.getFileName(), sTrace.getMethodName(), sTrace.getLineNumber());
         }
     }
 

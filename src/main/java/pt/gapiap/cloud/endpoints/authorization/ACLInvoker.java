@@ -8,14 +8,14 @@ import com.google.common.reflect.Reflection;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.servlet.RequestScoped;
-import pt.gapiap.cloud.endpoints.errors.GlobalError;
+import pt.gapiap.runtime.reflection.EnumArrayFromAnnotation;
 import pt.gapiap.servlets.OAuth2Helper;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 @RequestScoped
-public class ACLInvoker<T,A extends Authorization> {
+public class ACLInvoker<T, A extends Authorization> {
   private Class<T> sint;
   private ServiceInvokeHandler serviceInvokeHandler;
   @Inject
@@ -30,7 +30,7 @@ public class ACLInvoker<T,A extends Authorization> {
     this.sint = sint;
   }
 
-  public void init(AuthorizationContext<T, A> authorizationContext, RolesCapturer rolesCapturer) throws IOException, UnauthorizedException {
+  public void init(AuthorizationContext<T, A> authorizationContext, EnumArrayFromAnnotation enumArrayFromAnnotation) throws IOException, UnauthorizedException {
     String authString = servletRequest.getHeader("Authorization");
     Optional<String> op = Optional.fromNullable(Strings.emptyToNull(authString));
 
@@ -43,18 +43,18 @@ public class ACLInvoker<T,A extends Authorization> {
       System.out.printf("email:%s\n", oAuth2Helper.getCurrentUserEmail(token));
       user = new User(oAuth2Helper.getCurrentUserEmail(token), "baby-help");
     }
-    init(authorizationContext, rolesCapturer, user);
+    init(authorizationContext, enumArrayFromAnnotation, user);
   }
 
-  public void init(AuthorizationContext<T, A> authorizationContext, RolesCapturer rolesCapturer, User user) {
+  public void init(AuthorizationContext<T, A> authorizationContext, EnumArrayFromAnnotation enumArrayFromAnnotation, User user) {
     this.authorization = authorizationContext.getAuthorization();
     authorizationContext.getAuthorization().init(user);
-    serviceInvokeHandler = new ServiceInvokeHandler(authorizationContext, rolesCapturer);
+    serviceInvokeHandler = new ServiceInvokeHandler(authorizationContext, enumArrayFromAnnotation);
     serviceInvokeHandler.setLanguage(servletRequest.getLocale().getLanguage());
     injector.injectMembers(serviceInvokeHandler);
   }
 
-  public A getAuthorization(){
+  public A getAuthorization() {
     return authorization;
   }
 

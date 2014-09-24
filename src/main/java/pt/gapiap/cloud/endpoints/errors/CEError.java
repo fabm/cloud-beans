@@ -1,13 +1,8 @@
 package pt.gapiap.cloud.endpoints.errors;
 
-import com.google.appengine.repackaged.org.codehaus.jackson.map.ObjectMapper;
-import com.google.appengine.repackaged.org.codehaus.jackson.map.type.MapType;
-import com.google.appengine.repackaged.org.codehaus.jackson.type.JavaType;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
-import org.apache.http.HttpException;
 
-import javax.servlet.ServletException;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Map;
@@ -47,7 +42,6 @@ public class CEError extends RuntimeException {
     );
 
   }
-
 
 
   @Override

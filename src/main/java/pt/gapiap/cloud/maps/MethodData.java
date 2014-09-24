@@ -3,11 +3,11 @@ package pt.gapiap.cloud.maps;
 import javax.lang.model.element.Element;
 
 public class MethodData {
-    ApiValidator apiValidator;
+    ApiValidationMap apiValidationMap;
     Element element;
 
-    public ApiValidator getApiValidator() {
-        return apiValidator;
+    public ApiValidationMap getApiValidationMap() {
+        return apiValidationMap;
     }
 
     public Element getElement() {
