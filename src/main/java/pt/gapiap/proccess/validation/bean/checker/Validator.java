@@ -9,5 +9,5 @@ interface Validator {
 
     List<ValidationMethodChecker> getValidationList();
 
-    String getJsonTemplate(int code, String language);
+    String getJsonTemplate(int code);
 }

@@ -1,14 +1,14 @@
 package pt.gapiap.proccess.validation.bean.checker;
 
 import com.google.inject.Inject;
-import pt.gapiap.cloud.endpoints.errors.ErrorManager;
+import pt.gapiap.cloud.endpoints.errors.FailureManager;
 
 import java.util.List;
 
 public class ValidatorImpl implements Validator {
   private Class<?> validationClass;
   @Inject
-  private ErrorManager errorManager;
+  private FailureManager failureManager;
   private List<ValidationMethodChecker> validationList;
 
   public ValidatorImpl(Class<?> validationClass, List<ValidationMethodChecker> validationList) {
@@ -27,8 +27,8 @@ public class ValidatorImpl implements Validator {
   }
 
   @Override
-  public String getJsonTemplate(int code, String language) {
-    return errorManager.getFailTemplate(code, language).jsonTemplate();
+  public String getJsonTemplate(int code) {
+    return failureManager.getFailTemplate(code).jsonTemplate();
   }
 
 }

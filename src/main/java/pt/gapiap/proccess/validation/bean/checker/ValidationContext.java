@@ -5,6 +5,7 @@ import java.util.Collection;
 
 public interface ValidationContext<T extends Annotation> {
 
+
   Collection<Object> failArgs();
 
   boolean isNull();
@@ -19,7 +20,7 @@ public interface ValidationContext<T extends Annotation> {
 
   boolean isCollection();
 
-  boolean isArryay();
+  boolean isArray();
 
   boolean isAPermittedNull(boolean permitted);
 

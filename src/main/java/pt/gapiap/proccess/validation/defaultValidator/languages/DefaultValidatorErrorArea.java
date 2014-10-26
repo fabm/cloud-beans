@@ -35,6 +35,10 @@ public class DefaultValidatorErrorArea extends ErrorArea {
     return null;
   }
 
+
+  /**
+   * @return client error indexes
+   */
   @Override
   protected int[] getClientErrorIndexes() {
     return new int[]{

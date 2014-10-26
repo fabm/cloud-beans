@@ -2,9 +2,8 @@ package pt.gapiap.proccess.validation.bean.checker;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import pt.gapiap.cloud.endpoints.errors.ErrorArea;
-import pt.gapiap.cloud.endpoints.errors.ErrorManager;
 import pt.gapiap.cloud.endpoints.errors.ErrorTemplate;
+import pt.gapiap.cloud.endpoints.errors.FailureManager;
 import pt.gapiap.proccess.annotations.Embedded;
 import pt.gapiap.proccess.validation.LocaleFieldName;
 import pt.gapiap.proccess.validation.LocaleFieldNameDefault;
@@ -37,7 +36,7 @@ public class BeanChecker {
   @Inject
   private Injector injector;
   @Inject
-  private ErrorManager errorManager;
+  private FailureManager failureManager;
 
   private LocaleFieldName localeFieldName;
 
@@ -144,7 +143,7 @@ public class BeanChecker {
   private void validates(ValidationContext<?> validationContext, ValidationMethodChecker validationMethodChecker) {
     boolean checkedResult = validationMethodChecker.checkValidation(validationContext);
     if (!checkedResult) {
-      ErrorTemplate errorTemplate = errorManager.getFailTemplate(validationMethodChecker.failCode(), language);
+      ErrorTemplate errorTemplate = failureManager.getFailTemplate(validationMethodChecker.failCode());
 
       FailedFieldImpl failedField = new FailedFieldImpl();
 

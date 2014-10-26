@@ -10,8 +10,10 @@ import java.util.Map;
 public class CEError extends RuntimeException {
 
   private Map<String, ?> error;
+  private Failure failure;
 
   public CEError(Failure failure) {
+    this.failure = failure;
     init(failure);
   }
 
@@ -54,4 +56,7 @@ public class CEError extends RuntimeException {
     return error;
   }
 
+  public Failure getFailure() {
+    return failure;
+  }
 }

@@ -1,14 +1,13 @@
-package pt.gapiap.proccess.annotations;
+package pt.gapiap.proccess.validation.annotations;
+
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
-//TODO não me parece que isto agora sirva para alguma coisa
-@Deprecated
+//todo validar em tempo de compilação
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface GapiAPResource {
+@Target({ElementType.FIELD,ElementType.PARAMETER})
+public @interface DatePast {
 }

@@ -2,6 +2,8 @@ package pt.gapiap.proccess.validation.defaultValidator;
 
 import pt.gapiap.proccess.validation.EmailChecker;
 import pt.gapiap.proccess.validation.ValidationMethod;
+import pt.gapiap.proccess.validation.annotations.DateBetween;
+import pt.gapiap.proccess.validation.annotations.DateFuture;
 import pt.gapiap.proccess.validation.annotations.Email;
 import pt.gapiap.proccess.validation.bean.checker.ValidationContext;
 import pt.gapiap.proccess.validation.defaultValidator.languages.DefaultValidatorErrorContent;
@@ -11,11 +13,22 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.lang.reflect.Array;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.GregorianCalendar;
 
+//todo ver no validator.ts os valores que vêm dentro do objecto json
 public class DefaultValidator {
 
   private boolean nullable = true;
+
+  private static Calendar toCalendar(int year, int month, int day) {
+    return new GregorianCalendar(year, month, day);
+  }
+
+  private static boolean isACalendarType(Object value) {
+    return value.getClass().isAssignableFrom(Calendar.class);
+  }
 
   @ValidationMethod(value = NotNull.class, priority = 1, failCode = DefaultValidatorErrorContent.NOT_NULL)
   public boolean valRequired(ValidationContext<NotNull> context) {
@@ -44,7 +57,7 @@ public class DefaultValidator {
     if (context.isCollection()) {
       Collection<?> colletion = (Collection<?>) context.getValue();
       return colletion.size();
-    } else if (context.isArryay()) {
+    } else if (context.isArray()) {
       return Array.getLength(context.getValue());
     } else if (context.isString()) {
       return context.getValue().toString().length();
@@ -111,5 +124,40 @@ public class DefaultValidator {
     context.failArgs().add(annotation.value());
 
     return false;
+  }
+
+  //todo complete
+  @ValidationMethod(value = DateFuture.class, failCode = DefaultValidatorErrorContent.DATE_FUTURE)
+  public boolean valDateFuture(ValidationContext<DateFuture> context) {
+    if (context.isAPermittedNull(nullable)) {
+      return true;
+    }
+    if(!isACalendarType(context.getValue())){
+      return false;
+    }
+
+
+    return false;
+  }
+
+
+  //todo complete
+  @ValidationMethod(value = DateBetween.class, failCode = DefaultValidatorErrorContent.DATE_BETWEEN)
+  public boolean valDateBetween(ValidationContext<DateBetween> context) {
+
+    DateBetween annotation = context.getAnnotation();
+
+    if(!isACalendarType(context.getValue())){
+      return false;
+    }
+    if (context.isAPermittedNull(nullable)) {
+      return true;
+    }
+
+    Calendar begin = toCalendar(annotation.beginYear(), annotation.beginMonth(), annotation.beginDay());
+    Calendar end = toCalendar(annotation.beginYear(), annotation.beginMonth(), annotation.beginDay());
+
+
+    return end.before(context.getValue()) && begin.after(context.getValue());
   }
 }

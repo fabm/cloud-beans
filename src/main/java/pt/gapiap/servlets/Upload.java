@@ -1,32 +1,23 @@
 package pt.gapiap.servlets;
 
-import com.google.api.client.auth.oauth2.BearerToken;
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpResponseException;
-import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.server.spi.ObjectMapperUtil;
-import com.google.api.server.spi.config.Named;
 import com.google.api.server.spi.response.UnauthorizedException;
 import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.blobstore.BlobstoreService;
 import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
-import com.google.appengine.api.users.User;
-import com.google.appengine.repackaged.org.codehaus.jackson.JsonNode;
 import com.google.appengine.repackaged.org.codehaus.jackson.map.ObjectMapper;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import pt.gapiap.cloud.endpoints.EndpointReturn;
 import pt.gapiap.cloud.endpoints.authorization.UserWithRoles;
-import pt.gapiap.cloud.endpoints.errors.ErrorManager;
-import pt.gapiap.cloud.endpoints.errors.ErrorTemplate;
-import pt.gapiap.cloud.endpoints.errors.GlobalErrorArea;
+import pt.gapiap.cloud.endpoints.errors.FailureManager;
 import pt.gapiap.cloud.endpoints.errors.language.GlobalContent;
 import pt.gapiap.cloudEndpoints.services.annotations.InstanceType;
 import pt.gapiap.cloudEndpoints.services.annotations.PhotoUploadClass;
 import pt.gapiap.cloudEndpoints.services.annotations.PhotoUploadMethod;
 import pt.gapiap.cloudEndpoints.services.annotations.PhotoUploadedKey;
-import pt.gapiap.servlets.language.UploadErrorArea;
+import pt.gapiap.guice.CurrentEmailProvider;
+import pt.gapiap.guice.UserWithRolesProvider;
 import pt.gapiap.servlets.language.UploadErrorsContent;
 
 import javax.servlet.ServletException;
@@ -43,14 +34,16 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public abstract class Upload extends HttpServlet {
-  private static final NetHttpTransport HTTP_TRANSPORT = new NetHttpTransport();
   private static Map<String, UploadClassMethod> uploadMethodMap;
   @Inject
-  private ErrorManager errorManager;
-
+  private FailureManager failureManager;
+  @Inject
+  private CurrentEmailProvider currentEmailProvider;
+  @Inject
+  private UserWithRolesProvider<?> userWithRolesProvider;
 
   static {
-    uploadMethodMap = new TreeMap<String, UploadClassMethod>();
+    uploadMethodMap = new TreeMap<>();
   }
 
   private BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
@@ -61,7 +54,7 @@ public abstract class Upload extends HttpServlet {
   }
 
   private static Map<String, Object> errorMap(String message, int code) {
-    Map<String, Object> mapError = new HashMap<String, Object>();
+    Map<String, Object> mapError = new HashMap<>();
     mapError.put("failCode", code);
     mapError.put("message", message);
     return mapError;
@@ -112,35 +105,6 @@ public abstract class Upload extends HttpServlet {
 
   }
 
-  /**
-   * Call the url, that uses a OAuth2 to get the current email user
-   *
-   * @param accessToken String representation of the Bearer token
-   * @return current user email
-   * @throws java.io.IOException
-   * @throws org.apache.http.client.HttpResponseException
-   */
-  public String getCurrentUserEmail(String accessToken) throws IOException, UnauthorizedException {
-    if (accessToken == null) {
-      return null;
-    }
-    GenericUrl userInfo = new GenericUrl("https://www.googleapis.com/userinfo/v2/me");
-    Credential credential =
-        new Credential(BearerToken.authorizationHeaderAccessMethod()).setAccessToken(accessToken);
-    HttpRequestFactory requestFactory = HTTP_TRANSPORT.createRequestFactory(credential);
-
-    HttpResponse httpResponse = null;
-    try {
-      httpResponse = requestFactory.buildGetRequest(userInfo).execute();
-    } catch (HttpResponseException e) {
-      if (e.getStatusCode() == 401) {
-        throw new UnauthorizedException("Unauthorized");
-      }
-    }
-    ObjectMapper om = new ObjectMapper();
-    JsonNode jsonNode = om.readTree(httpResponse.getContent());
-    return jsonNode.get("email").toString();
-  }
 
   protected abstract UnauthorizedException errorAuthorizationOauth();
 
@@ -148,16 +112,18 @@ public abstract class Upload extends HttpServlet {
   public void doGet(HttpServletRequest req, HttpServletResponse res)
       throws ServletException, IOException {
 
+
     List<String> params = UrlParameters.getParameters(req);
     Map<String, Object> map = new HashMap<String, Object>();
     if (!params.isEmpty()) {
-      throw errorManager.create(UploadErrorsContent.NO_ACTION_PARAMETER, req.getLocale().getCountry());
+      throw failureManager.createError(UploadErrorsContent.NO_ACTION_PARAMETER);
     }
     String token = params.get(0);
     try {
-      map.put("email", getCurrentUserEmail(token));
+      currentEmailProvider.loadFromOAuth2();
+      map.put("email", currentEmailProvider.get());
     } catch (UnauthorizedException e) {
-      throw errorManager.create(GlobalContent.NOT_AUTHORIZED, req.getLocale().getLanguage());
+      throw failureManager.createError(GlobalContent.NOT_AUTHORIZED);
     }
     addObjectMapper(res);
   }
@@ -166,15 +132,15 @@ public abstract class Upload extends HttpServlet {
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 
-    ObjectMapper objectMaper = addObjectMapper(res);
+    ObjectMapper objectMapper = addObjectMapper(res);
 
 
-    Object out = null;
+    EndpointReturn endpointReturn = null;
     String errorMessageReturnMap = "The method '%s' must return a Map<String,Object>";
     try {
       String action = req.getParameter("action");
       if (action == null || action.isEmpty()) {
-        throw errorManager.create(UploadErrorsContent.NO_ACTION_PARAMETER, req.getLocale().getLanguage());
+        throw failureManager.createError(UploadErrorsContent.NO_ACTION_PARAMETER, req.getLocale().getLanguage());
       }
 
       UploadClassMethod<? extends UserWithRoles> uploadClassMethod = uploadMethodMap.get(action);
@@ -230,36 +196,21 @@ public abstract class Upload extends HttpServlet {
       if (noNamedAnnotation) {
         throw new RuntimeException(errorMessage);
       }
-
-      String authorizationHeader = req.getHeader("Authorization");
-
-
-      UserWithRoles<?> instance = uploadClassMethod.getInstace();
-      User user = null;
-      String email = getCurrentUserEmail(authorizationHeader);
-      if (email != null) {
-        user = new User(getCurrentUserEmail(authorizationHeader), "");
-      }
-      instance.setUser(user);
-      try {
-        out = method.invoke(instance, parameterValues);
-      } catch (InvocationTargetException e) {
-        Throwable target = e.getTargetException();
-        if (target instanceof ErrorTemplate) {
-          //todo corrigir
-          //out = ceReturnTransformer.transformTo(((CEError) target));
-        }
-      }
-    } catch (ClassCastException e) {
-      throw new RuntimeException(errorMessageReturnMap);
+      currentEmailProvider.loadFromOAuth2();
+      String email = currentEmailProvider.get();
+      userWithRolesProvider.setEmail(email);
+      endpointReturn = (EndpointReturn) method.invoke(userWithRolesProvider.get(), parameterValues);
     } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
-    } catch (InstantiationException e) {
-      throw new RuntimeException(e);
+      endpointReturn = new EndpointReturn(failureManager.createFailure(GlobalContent.UNEXPECTED));
+      e.printStackTrace();
     } catch (UnauthorizedException e) {
-      throw new ServletException(e);
+      endpointReturn = new EndpointReturn(failureManager.createFailure(GlobalContent.NOT_AUTHORIZED));
+      e.printStackTrace();
+    } catch (InvocationTargetException e) {
+      endpointReturn = new EndpointReturn(failureManager.createFailure(GlobalContent.UNEXPECTED));
+      e.printStackTrace();
     }
-    objectMaper.writeValue(res.getWriter(), out);
+    objectMapper.writeValue(res.getWriter(), endpointReturn);
   }
 
 

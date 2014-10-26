@@ -7,18 +7,14 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AuthorizationTest extends Authorization<MyRole, UserTest> {
+public class AuthorizationTest extends Authorization<MyRole> {
 
-  MessageFormat template = new MessageFormat("loadDataStore({0})");
+  MessageFormat template = new MessageFormat("loadUserWithRoles({0})");
   private boolean saved = false;
   private UserTest userTest;
   private boolean production = false;
   private List<String> callsList = new ArrayList<>();
 
-  @Override
-  protected void loadDataStore(String email) {
-    callsList.add(template.format(email));
-  }
 
   @Override
   public AppEnvironment getAppEnvironment() {
@@ -33,22 +29,6 @@ public class AuthorizationTest extends Authorization<MyRole, UserTest> {
         return !AuthorizationTest.this.production;
       }
     };
-  }
-
-  /**
-   * If the user is not persisted this call must be an implementation of persistence
-   *
-   * @return {@linkplain pt.json.runtime.cloud.authorization.UserTest}
-   */
-  @Override
-  public UserTest savedUser() {
-    saved = true;
-    return userTest;
-  }
-
-  @Override
-  protected void devMode() {
-    callsList.add("devMode()");
   }
 
   public void setUserTest(UserTest userTest) {

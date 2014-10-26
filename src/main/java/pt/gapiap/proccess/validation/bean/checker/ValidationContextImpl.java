@@ -64,7 +64,7 @@ public class ValidationContextImpl<T extends Annotation> implements ValidationCo
   }
 
   @Override
-  public boolean isArryay() {
+  public boolean isArray() {
     return getType().isArray();
   }
 
